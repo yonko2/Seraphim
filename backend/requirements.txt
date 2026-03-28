@@ -1,8 +1,11 @@
 fastapi==0.109.2
 uvicorn[standard]==0.27.1
 telethon==1.34.0
-py-tgcalls==2.1.0
+py-tgcalls==2.2.11
 gtts==2.5.1
 pydantic==2.6.1
 python-dotenv==1.0.1
 aiofiles==23.2.1
+groq>=0.12.0
+Pillow>=10.0.0
+google-generativeai==0.8.3

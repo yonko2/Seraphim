@@ -25,6 +25,7 @@ export interface DisasterClassification {
   confidence: number;
   description: string;
   timestamp: number;
+  instructions?: string[];
 }
 
 export interface EmergencyReport {
@@ -64,7 +65,6 @@ export interface AppState {
   activeEmergency: EmergencyReport | null;
   backendUrl: string;
   operatorTelegramId: string;
-  geminiApiKey: string;
   detectionSensitivity: number; // 0-1
   setMode: (mode: AppMode) => void;
   setMonitoring: (monitoring: boolean) => void;
@@ -72,5 +72,5 @@ export interface AppState {
   setHealthData: (data: HealthData) => void;
   setClassification: (classification: DisasterClassification) => void;
   setActiveEmergency: (report: EmergencyReport | null) => void;
-  updateSettings: (settings: Partial<Pick<AppState, 'backendUrl' | 'operatorTelegramId' | 'geminiApiKey' | 'detectionSensitivity'>>) => void;
+  updateSettings: (settings: Partial<Pick<AppState, 'backendUrl' | 'operatorTelegramId' | 'detectionSensitivity'>>) => void;
 }

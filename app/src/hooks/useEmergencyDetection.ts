@@ -12,7 +12,6 @@ export function useEmergencyDetection() {
   const sensors = useSensors();
   const health = useHealthData();
 
-  const geminiApiKey = useStore((s) => s.geminiApiKey);
   const backendUrl = useStore((s) => s.backendUrl);
   const activeEmergency = useStore((s) => s.activeEmergency);
   const setActiveEmergency = useStore((s) => s.setActiveEmergency);
@@ -28,7 +27,7 @@ export function useEmergencyDetection() {
 
   // Rebuild services when config changes
   useEffect(() => {
-    if (!geminiApiKey) {
+    if (!backendUrl) {
       geminiRef.current = null;
       detectorRef.current = null;
       reportGenRef.current = null;
@@ -36,7 +35,7 @@ export function useEmergencyDetection() {
       return;
     }
 
-    const gemini = new GeminiService(geminiApiKey);
+    const gemini = new GeminiService(backendUrl);
     geminiRef.current = gemini;
     detectorRef.current = new DisasterDetector(gemini);
     reportGenRef.current = new ReportGenerator(gemini);
@@ -44,7 +43,7 @@ export function useEmergencyDetection() {
       reportGenerator: reportGenRef.current,
       backendUrl,
     });
-  }, [geminiApiKey, backendUrl]);
+  }, [backendUrl]);
 
   const handleEmergencyDetected = useCallback(
     async (classification: DisasterClassification) => {

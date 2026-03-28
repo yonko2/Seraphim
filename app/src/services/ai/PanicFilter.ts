@@ -27,7 +27,12 @@ export class PanicFilter {
     const combined = rawObservations.join('\n');
 
     try {
-      return await this.gemini.filterPanic(combined);
+      const filtered = await this.gemini.filterPanic(combined);
+      // If the AI returns empty or very short text, use local fallback
+      if (filtered && filtered.length > 10) {
+        return filtered;
+      }
+      return this.localFilter(combined);
     } catch (error) {
       console.warn(
         '[PanicFilter] Gemini unavailable, falling back to local filter:',

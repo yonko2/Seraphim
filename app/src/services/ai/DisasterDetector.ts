@@ -1,5 +1,6 @@
 import type { DisasterClassification } from '../../types';
 import type { GeminiService } from './GeminiService';
+import { RateLimitError } from './GeminiService';
 
 const CAMERA_CAPTURE_INTERVAL = 5000; // ms
 const CONSECUTIVE_THRESHOLD = 2;
@@ -16,14 +17,51 @@ export class DisasterDetector {
   private emergencyListeners: EmergencyConfirmedCallback[] = [];
   private running = false;
 
-  constructor(geminiService: GeminiService) {
+  // Rate limit: minimum milliseconds between calls to Gemini (default: 60s)
+  private cooldownMs: number;
+  private lastRequestTs: number = 0;
+
+  constructor(geminiService: GeminiService, cooldownMs: number = 60_000) {
     this.gemini = geminiService;
+    this.cooldownMs = cooldownMs;
   }
 
   // ── Public API ────────────────────────────────────────────────────────
 
   async analyzeFrame(base64Image: string): Promise<DisasterClassification> {
-    return this.gemini.classifyImage(base64Image);
+    const now = Date.now();
+    if (now - this.lastRequestTs < this.cooldownMs) {
+      // Within cooldown: return previous classification if available to avoid extra API calls
+      if (this.previousClassification) {
+        return this.previousClassification;
+      }
+      // If no previous classification exists, return a safe "none" result
+      return {
+        type: 'none',
+        severity: 'none',
+        confidence: 0,
+        description: 'Analysis skipped due to rate limit',
+        timestamp: now,
+      } as DisasterClassification;
+    }
+
+    this.lastRequestTs = now;
+    try {
+      const result = await this.gemini.classifyImage(base64Image);
+      // Update previousClassification so future cooldown returns a sensible value
+      this.previousClassification = result;
+      return result;
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        // Extend the cooldown by the server-specified retry delay so we don't
+        // hammer the API again before the quota window resets.
+        this.lastRequestTs = now + error.retryAfterMs - this.cooldownMs;
+        console.warn(
+          `[DisasterDetector] Rate limited — pausing analysis for ${error.retryAfterMs / 1000}s`,
+        );
+      }
+      throw error;
+    }
   }
 
   isEmergency(classification: DisasterClassification): boolean {

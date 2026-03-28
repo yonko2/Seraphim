@@ -17,7 +17,6 @@ import FirstAidGuide from '../components/FirstAidGuide';
 import type { DisasterClassification, EmergencyType } from '../types';
 
 const HelperDashboard: React.FC = () => {
-  const geminiApiKey = useStore((s) => s.geminiApiKey);
   const backendUrl = useStore((s) => s.backendUrl);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -32,13 +31,13 @@ const HelperDashboard: React.FC = () => {
 
   // Lazily create services
   const getGemini = useCallback((): GeminiService | null => {
-    if (!geminiApiKey) return null;
+    if (!backendUrl) return null;
     if (!geminiRef.current) {
-      geminiRef.current = new GeminiService(geminiApiKey);
+      geminiRef.current = new GeminiService(backendUrl);
       detectorRef.current = new DisasterDetector(geminiRef.current);
     }
     return geminiRef.current;
-  }, [geminiApiKey]);
+  }, [backendUrl]);
 
   const handleCapture = useCallback(async (base64: string) => {
     lastBase64Ref.current = base64;
@@ -75,11 +74,16 @@ const HelperDashboard: React.FC = () => {
     setIsLoadingGuide(true);
     setFirstAidSteps([]);
     try {
-      const steps = await gemini.getFirstAidGuidance(
-        classification.type,
-        classification.description,
-      );
-      setFirstAidSteps(steps);
+      // Use instructions from image analysis if available, otherwise fetch from AI
+      if (classification.instructions && classification.instructions.length > 0) {
+        setFirstAidSteps(classification.instructions);
+      } else {
+        const steps = await gemini.getFirstAidGuidance(
+          classification.type,
+          classification.description,
+        );
+        setFirstAidSteps(steps);
+      }
     } catch (error) {
       console.warn('[HelperDashboard] First aid guidance failed:', error);
       setFirstAidSteps([
@@ -100,10 +104,16 @@ const HelperDashboard: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          source: 'helper',
-          timestamp: Date.now(),
-          classification,
-          type: classification?.type ?? 'unknown',
+          timestamp: Date.now() / 1000,
+          emergency_type: classification?.type ?? 'unknown',
+          severity: classification?.severity ?? 'medium',
+          objective_description: classification?.description ?? 'Emergency reported by helper',
+          recommended_actions: firstAidSteps.length > 0
+            ? firstAidSteps
+            : ['Call 112 immediately'],
+          raw_observations: classification
+            ? [`Helper observed: ${classification.description}`]
+            : ['Helper triggered emergency alert'],
         }),
       });
       if (response.ok) {
@@ -116,7 +126,7 @@ const HelperDashboard: React.FC = () => {
     } finally {
       setIsAlerting(false);
     }
-  }, [backendUrl, classification]);
+  }, [backendUrl, classification, firstAidSteps]);
 
   const emergencyType: EmergencyType = classification?.type ?? 'unknown';
   const hasClassification = classification != null && classification.type !== 'none';

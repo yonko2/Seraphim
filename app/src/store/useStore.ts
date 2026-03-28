@@ -10,7 +10,6 @@ export const useStore = create<AppState>((set) => ({
   activeEmergency: null,
   backendUrl: 'https://dreamful-amiya-mostly.ngrok-free.dev',
   operatorTelegramId: 'Bayryamcho',
-  geminiApiKey: 'AIzaSyDc9TeJJogVa3mea5hWqWJG1EH5Is4nHg4',
   detectionSensitivity: 0.7,
   setMode: (mode: AppMode) => set({ mode }),
   setMonitoring: (isMonitoring: boolean) => set({ isMonitoring }),

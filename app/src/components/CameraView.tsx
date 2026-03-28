@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,12 @@ import {
 } from 'expo-camera';
 import { DisasterClassification } from '../types';
 
+const RECORD_DURATION_MS = 10000;
+const MAX_FRAMES = 100; // no practical limit — capture as many as hardware allows
+
 interface CameraViewProps {
   onCapture?: (base64: string) => void;
+  onVideoCapture?: (frames: string[]) => void;
   isAnalyzing?: boolean;
   classification?: DisasterClassification | null;
 }
@@ -28,23 +32,35 @@ const SEVERITY_COLORS: Record<string, string> = {
 
 export default function CameraViewComponent({
   onCapture,
+  onVideoCapture,
   isAnalyzing = false,
   classification = null,
 }: CameraViewProps) {
   const cameraRef = useRef<ExpoCameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
+  const [cameraReady, setCameraReady] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordProgress, setRecordProgress] = useState(0);
+  const recordingRef = useRef(false);
+  const framesRef = useRef<string[]>([]);
 
   const isEmergency =
     classification != null &&
     classification.type !== 'none' &&
     classification.severity !== 'none';
 
-  const handleCapture = async () => {
-    if (!cameraRef.current || isAnalyzing) return;
+  useEffect(() => {
+    if (permission && !permission.granted) {
+      requestPermission();
+    }
+  }, [permission]);
+
+  const captureFrame = useCallback(async () => {
+    if (!cameraRef.current) return;
     try {
       const photo = await cameraRef.current.takePictureAsync({
         base64: true,
-        quality: 0.5,
+        quality: 0.7,
       });
       if (photo?.base64 && onCapture) {
         onCapture(photo.base64);
@@ -52,9 +68,83 @@ export default function CameraViewComponent({
     } catch (err) {
       console.warn('[CameraView] Capture failed:', err);
     }
+  }, [onCapture]);
+
+  const handleCapture = async () => {
+    if (isAnalyzing) return;
+    await captureFrame();
   };
 
-  // Permission not yet determined
+  const toggleRecording = () => {
+    if (recording) {
+      // Manual stop — send whatever frames we have
+      recordingRef.current = false;
+      setRecording(false);
+      setRecordProgress(0);
+      const collected = [...framesRef.current];
+      framesRef.current = [];
+      console.log(`[CameraView] Recording stopped manually, ${collected.length} frames`);
+      if (collected.length > 0 && onVideoCapture) {
+        onVideoCapture(collected);
+      }
+    } else {
+      recordingRef.current = true;
+      framesRef.current = [];
+      setRecording(true);
+      setRecordProgress(0);
+
+      // Back-to-back capture loop — no frames skipped
+      const captureLoop = async () => {
+        const startTime = Date.now();
+        let count = 0;
+
+        while (recordingRef.current && count < MAX_FRAMES) {
+          const elapsed = Date.now() - startTime;
+          if (elapsed >= RECORD_DURATION_MS) break;
+
+          setRecordProgress(Math.min(elapsed / RECORD_DURATION_MS, 1));
+
+          if (cameraRef.current) {
+            try {
+              const photo = await cameraRef.current.takePictureAsync({
+                base64: true,
+                quality: 0.2,
+                skipProcessing: true,
+              });
+              if (photo?.base64 && recordingRef.current) {
+                framesRef.current.push(photo.base64);
+                count++;
+                console.log(`[CameraView] Frame ${count} captured at ${elapsed}ms`);
+              }
+            } catch (err) {
+              console.warn('[CameraView] Frame capture failed:', err);
+            }
+          }
+        }
+
+        // Done
+        recordingRef.current = false;
+        setRecording(false);
+        setRecordProgress(1);
+        const collected = [...framesRef.current];
+        framesRef.current = [];
+        console.log(`[CameraView] Recording done, ${collected.length} frames captured`);
+        setTimeout(() => setRecordProgress(0), 300);
+        if (collected.length > 0 && onVideoCapture) {
+          onVideoCapture(collected);
+        }
+      };
+
+      captureLoop();
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      recordingRef.current = false;
+    };
+  }, []);
+
   if (!permission) {
     return (
       <View style={styles.card}>
@@ -64,7 +154,6 @@ export default function CameraViewComponent({
     );
   }
 
-  // Permission denied
   if (!permission.granted) {
     return (
       <View style={styles.card}>
@@ -82,10 +171,15 @@ export default function CameraViewComponent({
 
   return (
     <View style={[styles.card, isEmergency && styles.emergencyBorder]}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>🎥 Live Camera</Text>
-        {isAnalyzing && (
+        {recording && (
+          <View style={styles.recordingBadge}>
+            <View style={styles.recordingDot} />
+            <Text style={styles.recordingText}>REC</Text>
+          </View>
+        )}
+        {isAnalyzing && !recording && (
           <View style={styles.analyzingBadge}>
             <ActivityIndicator size="small" color="#007AFF" />
             <Text style={styles.analyzingText}>Analyzing…</Text>
@@ -93,15 +187,14 @@ export default function CameraViewComponent({
         )}
       </View>
 
-      {/* Camera Preview */}
       <View style={styles.cameraWrapper}>
         <ExpoCameraView
           ref={cameraRef}
           style={styles.camera}
           facing="back"
+          onCameraReady={() => setCameraReady(true)}
         />
 
-        {/* Classification Overlay */}
         {classification && classification.type !== 'none' && (
           <View style={styles.overlay}>
             <View
@@ -137,17 +230,38 @@ export default function CameraViewComponent({
         )}
       </View>
 
-      {/* Capture Button */}
-      <TouchableOpacity
-        style={[styles.captureButton, isAnalyzing && styles.captureDisabled]}
-        onPress={handleCapture}
-        activeOpacity={0.7}
-        disabled={isAnalyzing}
-      >
-        <View style={styles.captureOuter}>
-          <View style={[styles.captureInner, isAnalyzing && styles.captureInnerDisabled]} />
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+        <TouchableOpacity
+          style={[styles.captureBtn, (isAnalyzing || !cameraReady || recording) && styles.captureDisabled]}
+          onPress={handleCapture}
+          activeOpacity={0.7}
+          disabled={isAnalyzing || !cameraReady || recording}
+        >
+          <Text style={styles.captureBtnText}>📸 Capture</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.recordBtn,
+            recording && styles.recordBtnActive,
+            (!cameraReady || isAnalyzing) && styles.captureDisabled,
+          ]}
+          onPress={toggleRecording}
+          activeOpacity={0.7}
+          disabled={!cameraReady || isAnalyzing}
+        >
+          <Text style={styles.recordBtnText}>
+            {recording ? '⏹ Stop' : '🎥 Record'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Recording progress bar */}
+      {recording && (
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${recordProgress * 100}%` }]} />
         </View>
-      </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -189,6 +303,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  recordingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ff3b3022',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ff3b30',
+  },
+  recordingText: {
+    color: '#ff3b30',
+    fontSize: 12,
+    fontWeight: '800',
+  },
   cameraWrapper: {
     borderRadius: 12,
     overflow: 'hidden',
@@ -198,6 +332,8 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+    height: 220,
+    width: '100%',
   },
   overlay: {
     position: 'absolute',
@@ -238,32 +374,52 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  captureButton: {
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  captureDisabled: {
-    opacity: 0.4,
-  },
-  captureOuter: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 3,
-    borderColor: '#ffffff44',
+  captureBtn: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  captureInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#ffffff',
+  captureBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
-  captureInnerDisabled: {
-    backgroundColor: '#555',
+  captureDisabled: {
+    opacity: 0.5,
   },
-  // Permission states
+  recordBtn: {
+    flex: 1,
+    backgroundColor: '#333',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ff3b30',
+  },
+  recordBtnActive: {
+    backgroundColor: '#ff3b3033',
+  },
+  recordBtnText: {
+    color: '#ff3b30',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  progressBarBg: {
+    marginTop: 8,
+    height: 6,
+    backgroundColor: '#333',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#ff3b30',
+    borderRadius: 3,
+  },
   permText: {
     color: '#888',
     fontSize: 13,

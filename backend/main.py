@@ -2,9 +2,12 @@ import os
 import asyncio
 import logging
 import traceback
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
@@ -17,6 +20,7 @@ load_dotenv()
 from services.telegram_caller import TelegramCaller
 from services.tts_service import TTSService
 from services.report_processor import ReportProcessor
+from services.gemini_service import get_gemini_service
 
 
 class EmergencyReportRequest(BaseModel):
@@ -35,6 +39,43 @@ class CallStatus(BaseModel):
     status: str
     call_id: Optional[str] = None
     message: str
+
+
+class ImageAnalyzeRequest(BaseModel):
+    image: str  # base64 encoded image
+
+
+class VideoAnalyzeRequest(BaseModel):
+    frames: list[str]  # list of base64 encoded frames
+
+
+class ImageAnalyzeResponse(BaseModel):
+    emergency: bool
+    type: str
+    severity: str
+    confidence: float
+    title: str
+    description: str
+    icon: str
+    instructions: list[str] = []
+
+
+class FirstAidRequest(BaseModel):
+    emergency_type: str
+    description: str
+
+
+class FirstAidResponse(BaseModel):
+    steps: list[str]
+    emergency_type: str
+
+
+class PanicFilterRequest(BaseModel):
+    text: str
+
+
+class PanicFilterResponse(BaseModel):
+    filtered_text: str
 
 
 telegram_caller: Optional[TelegramCaller] = None
@@ -76,13 +117,145 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/", response_class=HTMLResponse)
+async def demo_page():
+    """Serve the emergency detection demo UI."""
+    html_path = STATIC_DIR / "index.html"
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
 
 @app.get("/health")
 async def health_check():
+    gemini_service = get_gemini_service()
     return {
         "status": "ok",
         "telegram_connected": telegram_caller is not None and telegram_caller.is_connected,
+        "gemini_available": gemini_service.is_available(),
     }
+
+
+@app.get("/api/health")
+async def api_health():
+    """Health check for the demo UI."""
+    gemini_service = get_gemini_service()
+    return {
+        "gemini_available": gemini_service.is_available(),
+        "provider": gemini_service.provider or "none",
+    }
+
+
+@app.post("/api/analyze", response_model=ImageAnalyzeResponse)
+async def analyze_image(request: ImageAnalyzeRequest):
+    """Analyze an image for emergency situations using Gemini Vision AI."""
+    gemini_service = get_gemini_service()
+
+    if not gemini_service.is_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Gemini AI not available. Check GEMINI_API_KEY in .env"
+        )
+
+    try:
+        # Strip data URL prefix if present (e.g., "data:image/jpeg;base64,")
+        image_data = request.image
+        if "," in image_data:
+            image_data = image_data.split(",", 1)[1]
+
+        result = await gemini_service.analyze_image(image_data)
+
+        return ImageAnalyzeResponse(**result)
+
+    except ValueError as e:
+        logger.error(f"Image analysis failed - invalid response: {e}")
+        raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
+    except RuntimeError as e:
+        logger.error(f"Image analysis failed - runtime error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Image analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze image: {str(e)}")
+
+
+@app.post("/api/analyze-video", response_model=ImageAnalyzeResponse)
+async def analyze_video(request: VideoAnalyzeRequest):
+    """Analyze multiple video frames for emergency situations."""
+    gemini_service = get_gemini_service()
+
+    if not gemini_service.is_available():
+        raise HTTPException(
+            status_code=503,
+            detail="AI service not available. Check API keys in .env"
+        )
+
+    if not request.frames:
+        raise HTTPException(status_code=400, detail="No frames provided")
+
+    logger.info(f"Video analysis: received {len(request.frames)} frames")
+
+    try:
+        # Strip data URL prefixes and limit to 5 frames (Groq max)
+        cleaned_frames = []
+        for frame in request.frames:
+            if "," in frame:
+                frame = frame.split(",", 1)[1]
+            cleaned_frames.append(frame)
+
+        result = await gemini_service.analyze_video_frames(cleaned_frames)
+        return ImageAnalyzeResponse(**result)
+
+    except ValueError as e:
+        logger.error(f"Video analysis failed - invalid response: {e}")
+        raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
+    except Exception as e:
+        logger.error(f"Video analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze video: {str(e)}")
+
+
+@app.post("/api/first-aid", response_model=FirstAidResponse)
+async def get_first_aid(request: FirstAidRequest):
+    """Generate context-specific first aid guidance using Gemini AI."""
+    gemini_service = get_gemini_service()
+
+    if not gemini_service.is_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Gemini AI not available. Check GEMINI_API_KEY in .env"
+        )
+
+    try:
+        steps = await gemini_service.get_first_aid_guidance(
+            request.emergency_type,
+            request.description
+        )
+        return FirstAidResponse(
+            steps=steps,
+            emergency_type=request.emergency_type
+        )
+    except Exception as e:
+        logger.error(f"First aid guidance failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate guidance: {str(e)}")
+
+
+@app.post("/api/filter-panic", response_model=PanicFilterResponse)
+async def filter_panic(request: PanicFilterRequest):
+    """Rewrite panicked text into calm, objective observations using Gemini AI."""
+    gemini_service = get_gemini_service()
+
+    if not gemini_service.is_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Gemini AI not available. Check GEMINI_API_KEY in .env"
+        )
+
+    try:
+        filtered = await gemini_service.filter_panic(request.text)
+        return PanicFilterResponse(filtered_text=filtered)
+    except Exception as e:
+        logger.error(f"Panic filter failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to filter text: {str(e)}")
 
 
 @app.post("/emergency", response_model=CallStatus)

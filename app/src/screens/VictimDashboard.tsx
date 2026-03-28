@@ -13,7 +13,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/types';
 import { useEmergencyDetection } from '../hooks/useEmergencyDetection';
 import { useStore } from '../store/useStore';
-import { DisasterDetector } from '../services/ai/DisasterDetector';
 import { GeminiService } from '../services/ai/GeminiService';
 import SensorMonitor from '../components/SensorMonitor';
 import CameraViewComponent from '../components/CameraView';
@@ -32,21 +31,19 @@ const VictimDashboard: React.FC = () => {
     activeEmergency,
   } = useEmergencyDetection();
 
-  const geminiApiKey = useStore((s) => s.geminiApiKey);
+  const backendUrl = useStore((s) => s.backendUrl);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [classification, setClassification] = useState<DisasterClassification | null>(null);
-  const detectorRef = useRef<DisasterDetector | null>(null);
+  const geminiRef = useRef<GeminiService | null>(null);
 
-  // Build detector when API key is available
   useEffect(() => {
-    if (geminiApiKey) {
-      const gemini = new GeminiService(geminiApiKey);
-      detectorRef.current = new DisasterDetector(gemini);
+    if (backendUrl) {
+      geminiRef.current = new GeminiService(backendUrl);
     } else {
-      detectorRef.current = null;
+      geminiRef.current = null;
     }
-  }, [geminiApiKey]);
+  }, [backendUrl]);
 
   // Navigate to Emergency screen when emergency is active
   useEffect(() => {
@@ -58,16 +55,34 @@ const VictimDashboard: React.FC = () => {
   const analyzingRef = useRef(false);
 
   const handleCapture = useCallback(async (base64: string) => {
-    const detector = detectorRef.current;
-    if (!detector || analyzingRef.current) return;
+    const gemini = geminiRef.current;
+    if (!gemini || analyzingRef.current) return;
 
     analyzingRef.current = true;
     setIsAnalyzing(true);
     try {
-      const result = await detector.analyzeFrame(base64);
+      const result = await gemini.classifyImage(base64);
       setClassification(result);
     } catch (error) {
       console.warn('[VictimDashboard] Frame analysis failed:', error);
+      Alert.alert('Analysis Failed', String(error));
+    } finally {
+      analyzingRef.current = false;
+      setIsAnalyzing(false);
+    }
+  }, []);
+
+  const handleVideoCapture = useCallback(async (frames: string[]) => {
+    const gemini = geminiRef.current;
+    if (!gemini || analyzingRef.current || frames.length === 0) return;
+
+    analyzingRef.current = true;
+    setIsAnalyzing(true);
+    try {
+      const result = await gemini.classifyVideo(frames);
+      setClassification(result);
+    } catch (error) {
+      console.warn('[VictimDashboard] Video analysis failed:', error);
       Alert.alert('Analysis Failed', String(error));
     } finally {
       analyzingRef.current = false;
@@ -105,10 +120,69 @@ const VictimDashboard: React.FC = () => {
         <View style={styles.cameraSection}>
           <CameraViewComponent
             onCapture={handleCapture}
+            onVideoCapture={handleVideoCapture}
             isAnalyzing={isAnalyzing}
             classification={classification}
           />
         </View>
+
+        {/* AI Analysis Result Panel */}
+        {(classification || isAnalyzing) && (
+          <View style={[
+            styles.resultPanel,
+            classification && classification.type !== 'none' && classification.severity !== 'none'
+              ? styles.resultEmergency
+              : styles.resultSafe,
+            isAnalyzing && styles.resultAnalyzing,
+          ]}>
+            {isAnalyzing ? (
+              <View style={styles.resultRow}>
+                <Text style={styles.resultIcon}>⏳</Text>
+                <Text style={styles.resultTitle}>Analyzing with AI…</Text>
+              </View>
+            ) : classification && classification.type !== 'none' && classification.severity !== 'none' ? (
+              <>
+                <View style={styles.resultRow}>
+                  <Text style={styles.resultIcon}>🚨</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.resultTitle}>
+                      {classification.type.replace('_', ' ').toUpperCase()} DETECTED
+                    </Text>
+                    <Text style={styles.resultMeta}>
+                      Severity: {classification.severity} · Confidence: {(classification.confidence * 100).toFixed(0)}%
+                    </Text>
+                  </View>
+                </View>
+                {classification.description ? (
+                  <Text style={styles.resultDescription}>{classification.description}</Text>
+                ) : null}
+                {classification.instructions && classification.instructions.length > 0 && (
+                  <View style={styles.instructionsBox}>
+                    <Text style={styles.instructionsTitle}>⚡ Immediate Actions:</Text>
+                    {classification.instructions.map((step, i) => (
+                      <Text key={i} style={styles.instructionStep}>
+                        {i + 1}. {step}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </>
+            ) : classification ? (
+              <View style={styles.resultRow}>
+                <Text style={styles.resultIcon}>✅</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.resultTitle, { color: '#30d158' }]}>NO EMERGENCY</Text>
+                  {classification.description ? (
+                    <Text style={styles.resultDescription}>{classification.description}</Text>
+                  ) : null}
+                  <Text style={styles.resultMeta}>
+                    Confidence: {(classification.confidence * 100).toFixed(0)}%
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        )}
 
         {/* Health Metrics */}
         <HealthMetrics />
@@ -189,6 +263,70 @@ const styles = StyleSheet.create({
   },
   cameraSection: {
     maxHeight: 320,
+  },
+  resultPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 16,
+    padding: 16,
+  },
+  resultEmergency: {
+    backgroundColor: '#3a1111',
+    borderWidth: 2,
+    borderColor: '#ff3b30',
+  },
+  resultSafe: {
+    backgroundColor: '#112211',
+    borderWidth: 2,
+    borderColor: '#30d158',
+  },
+  resultAnalyzing: {
+    backgroundColor: '#2a2200',
+    borderWidth: 2,
+    borderColor: '#ff9500',
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  resultIcon: {
+    fontSize: 32,
+  },
+  resultTitle: {
+    color: '#ff3b30',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  resultMeta: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  resultDescription: {
+    color: '#ccc',
+    fontSize: 14,
+    marginTop: 10,
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  instructionsBox: {
+    marginTop: 12,
+    backgroundColor: '#ffffff10',
+    borderRadius: 10,
+    padding: 12,
+  },
+  instructionsTitle: {
+    color: '#ff9500',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  instructionStep: {
+    color: '#ddd',
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 2,
   },
   emergencyButton: {
     marginHorizontal: 16,

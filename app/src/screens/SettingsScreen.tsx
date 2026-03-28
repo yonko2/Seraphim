@@ -24,7 +24,7 @@ const SettingsScreen: React.FC = () => {
     setBackendUrl(store.backendUrl);
     setOperatorTelegramId(store.operatorTelegramId);
     setSensitivity(store.detectionSensitivity);
-  }, [store.backendUrl, store.operatorTelegramId, store.geminiApiKey, store.detectionSensitivity]);
+  }, [store.backendUrl, store.operatorTelegramId, store.detectionSensitivity]);
 
   const handleSave = () => {
     store.updateSettings({

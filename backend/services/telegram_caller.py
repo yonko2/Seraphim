@@ -12,14 +12,17 @@ logger = logging.getLogger("seraphim")
 
 
 def convert_to_ogg(mp3_path: str) -> str:
-    """Convert MP3 to OGG opus for VoIP compatibility."""
+    """Convert MP3 to OGG opus optimized for VoIP speech streaming."""
     ogg_path = mp3_path.rsplit(".", 1)[0] + ".ogg"
     try:
         subprocess.run(
             [
                 "ffmpeg", "-y", "-i", mp3_path,
-                "-c:a", "libopus", "-b:a", "64k",
+                "-c:a", "libopus", "-b:a", "48k",
                 "-ar", "48000", "-ac", "1",
+                "-application", "voip",
+                "-frame_duration", "20",
+                "-vbr", "on",
                 ogg_path,
             ],
             capture_output=True, check=True, timeout=30,
