@@ -4,6 +4,7 @@ import { HealthData, HealthProvider } from '../types';
 import { HealthProviderManager } from '../services/health/HealthProvider';
 import { AppleHealthProvider } from '../services/health/AppleHealthProvider';
 import { GoogleHealthProvider } from '../services/health/GoogleHealthProvider';
+import { GarminHealthProvider } from '../services/health/GarminHealthProvider';
 import { useStore } from '../store/useStore';
 
 export function useHealthData() {
@@ -15,6 +16,7 @@ export function useHealthData() {
   const [error, setError] = useState<string | null>(null);
 
   const setStoreHealthData = useStore((s) => s.setHealthData);
+  const backendUrl = useStore((s) => s.backendUrl);
 
   if (!managerRef.current) {
     const manager = new HealthProviderManager();
@@ -23,6 +25,8 @@ export function useHealthData() {
     } else if (Platform.OS === 'android') {
       manager.registerProvider(new GoogleHealthProvider());
     }
+    // Register Garmin provider (works on both platforms via backend)
+    manager.registerProvider(new GarminHealthProvider(backendUrl));
     managerRef.current = manager;
   }
 

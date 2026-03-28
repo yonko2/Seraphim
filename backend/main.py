@@ -42,6 +42,7 @@ from services.telegram_caller import TelegramCaller
 from services.tts_service import TTSService
 from services.report_processor import ReportProcessor
 from services.gemini_service import get_gemini_service
+from routers import garmin as garmin_router
 
 
 class EmergencyReportRequest(BaseModel):
@@ -137,6 +138,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Garmin router
+app.include_router(garmin_router.router)
 
 STATIC_DIR = Path(__file__).parent / "static"
 

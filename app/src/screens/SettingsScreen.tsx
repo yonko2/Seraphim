@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useStore } from '../store/useStore';
 import { BackendClient } from '../services/api/BackendClient';
+import { GarminHealthProvider } from '../services/health/GarminHealthProvider';
 
 const SettingsScreen: React.FC = () => {
   const store = useStore();
@@ -20,11 +21,47 @@ const SettingsScreen: React.FC = () => {
   const [sensitivity, setSensitivity] = useState(store.detectionSensitivity);
   const [isTesting, setIsTesting] = useState(false);
 
+  // Garmin Connect state
+  const [garminEmail, setGarminEmail] = useState('');
+  const [garminPassword, setGarminPassword] = useState('');
+  const [garminProvider, setGarminProvider] = useState<GarminHealthProvider | null>(null);
+  const [garminStatus, setGarminStatus] = useState<{ available: boolean; authenticated: boolean; email?: string } | null>(null);
+  const [isGarminLoading, setIsGarminLoading] = useState(false);
+  const [showGarminForm, setShowGarminForm] = useState(false);
+
   useEffect(() => {
     setBackendUrl(store.backendUrl);
     setOperatorTelegramId(store.operatorTelegramId);
     setSensitivity(store.detectionSensitivity);
   }, [store.backendUrl, store.operatorTelegramId, store.detectionSensitivity]);
+
+  // Initialize Garmin provider and check status
+  useEffect(() => {
+    const initGarmin = async () => {
+      const provider = new GarminHealthProvider(store.backendUrl);
+      setGarminProvider(provider);
+      
+      try {
+        const available = await provider.isAvailable();
+        if (available) {
+          // Check if already authenticated
+          await provider.requestPermissions();
+          setGarminStatus({
+            available: true,
+            authenticated: provider.getAuthenticated(),
+            email: provider.getEmail() || undefined,
+          });
+        } else {
+          setGarminStatus({ available: false, authenticated: false });
+        }
+      } catch (error) {
+        console.warn('Failed to check Garmin status:', error);
+        setGarminStatus({ available: false, authenticated: false });
+      }
+    };
+
+    initGarmin();
+  }, [store.backendUrl]);
 
   const handleSave = () => {
     store.updateSettings({
@@ -50,6 +87,45 @@ const SettingsScreen: React.FC = () => {
       Alert.alert('Test Failed', message);
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const handleGarminConnect = async () => {
+    if (!garminProvider) return;
+    
+    setIsGarminLoading(true);
+    try {
+      const success = await garminProvider.authenticate(garminEmail, garminPassword);
+      if (success) {
+        setGarminStatus({
+          available: true,
+          authenticated: true,
+          email: garminEmail,
+        });
+        setShowGarminForm(false);
+        setGarminPassword('');
+        Alert.alert('Success', 'Connected to Garmin Connect!');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication failed';
+      Alert.alert('Connection Failed', message);
+    } finally {
+      setIsGarminLoading(false);
+    }
+  };
+
+  const handleGarminDisconnect = async () => {
+    if (!garminProvider) return;
+    
+    setIsGarminLoading(true);
+    try {
+      await garminProvider.disconnect();
+      setGarminStatus({ available: true, authenticated: false });
+      Alert.alert('Disconnected', 'Garmin Connect has been disconnected.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to disconnect from Garmin.');
+    } finally {
+      setIsGarminLoading(false);
     }
   };
 
@@ -87,6 +163,93 @@ const SettingsScreen: React.FC = () => {
             autoCorrect={false}
             keyboardType="numeric"
           />
+        </View>
+
+        {/* Garmin Connect Section */}
+        <Text style={styles.sectionHeader}>GARMIN CONNECT</Text>
+        <View style={styles.card}>
+          {garminStatus === null ? (
+            <ActivityIndicator color="#007AFF" />
+          ) : !garminStatus.available ? (
+            <View>
+              <Text style={styles.garminStatusText}>⚠️ Garmin service unavailable</Text>
+              <Text style={styles.helperText}>Make sure the backend is running and garminconnect is installed</Text>
+            </View>
+          ) : garminStatus.authenticated ? (
+            <View>
+              <View style={styles.garminConnectedRow}>
+                <Text style={styles.garminStatusText}>✅ Connected</Text>
+                <Text style={styles.garminEmail}>{garminStatus.email}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.garminDisconnectButton}
+                onPress={handleGarminDisconnect}
+                disabled={isGarminLoading}
+              >
+                {isGarminLoading ? (
+                  <ActivityIndicator color="#ff3b30" size="small" />
+                ) : (
+                  <Text style={styles.garminDisconnectText}>Disconnect</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : showGarminForm ? (
+            <View>
+              <Text style={styles.label}>Garmin Email</Text>
+              <TextInput
+                style={styles.input}
+                value={garminEmail}
+                onChangeText={setGarminEmail}
+                placeholder="your@email.com"
+                placeholderTextColor="#555"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+              />
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                value={garminPassword}
+                onChangeText={setGarminPassword}
+                placeholder="Your password"
+                placeholderTextColor="#555"
+                secureTextEntry
+              />
+              <View style={styles.garminButtonRow}>
+                <TouchableOpacity
+                  style={styles.garminCancelButton}
+                  onPress={() => setShowGarminForm(false)}
+                  disabled={isGarminLoading}
+                >
+                  <Text style={styles.garminCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.garminConnectButton}
+                  onPress={handleGarminConnect}
+                  disabled={isGarminLoading || !garminEmail || !garminPassword}
+                >
+                  {isGarminLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={styles.garminConnectText}>Connect</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.garminStatusText}>📊 Not connected</Text>
+              <Text style={styles.helperText}>
+                Connect your Garmin account to sync health data
+              </Text>
+              <TouchableOpacity
+                style={styles.garminConnectButton}
+                onPress={() => setShowGarminForm(true)}
+              >
+                <Text style={styles.garminConnectText}>Connect Garmin</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Detection Section */}
@@ -274,6 +437,68 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 40,
+  },
+  // Garmin Connect styles
+  garminStatusText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  garminConnectedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  garminEmail: {
+    fontSize: 14,
+    color: '#888',
+  },
+  garminConnectButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  garminConnectText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  garminDisconnectButton: {
+    backgroundColor: '#ff3b3022',
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#ff3b30',
+  },
+  garminDisconnectText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ff3b30',
+  },
+  garminButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  garminCancelButton: {
+    flex: 1,
+    backgroundColor: '#333',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  garminCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
 
