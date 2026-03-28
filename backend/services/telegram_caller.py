@@ -11,22 +11,26 @@ from pytgcalls import filters
 logger = logging.getLogger("seraphim")
 
 
-def convert_to_ogg(mp3_path: str) -> str:
-    """Convert MP3 to OGG opus optimized for VoIP speech streaming."""
+def convert_to_ogg(mp3_path: str, speed: float = 1.35) -> str:
+    """Convert MP3 to OGG opus optimized for VoIP speech streaming.
+    speed: playback speed multiplier (1.35 = 35% faster)."""
     ogg_path = mp3_path.rsplit(".", 1)[0] + ".ogg"
     try:
-        subprocess.run(
-            [
-                "ffmpeg", "-y", "-i", mp3_path,
-                "-c:a", "libopus", "-b:a", "48k",
-                "-ar", "48000", "-ac", "1",
-                "-application", "voip",
-                "-frame_duration", "20",
-                "-vbr", "on",
-                ogg_path,
-            ],
-            capture_output=True, check=True, timeout=30,
-        )
+        af_filters = f"atempo={speed}" if speed != 1.0 else None
+        cmd = [
+            "ffmpeg", "-y", "-i", mp3_path,
+        ]
+        if af_filters:
+            cmd += ["-af", af_filters]
+        cmd += [
+            "-c:a", "libopus", "-b:a", "48k",
+            "-ar", "48000", "-ac", "1",
+            "-application", "voip",
+            "-frame_duration", "20",
+            "-vbr", "on",
+            ogg_path,
+        ]
+        subprocess.run(cmd, capture_output=True, check=True, timeout=30)
         return ogg_path
     except Exception:
         return mp3_path

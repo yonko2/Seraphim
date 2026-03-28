@@ -125,7 +125,7 @@ const VictimDashboard: React.FC = () => {
     if (isEmergency && callState === 'idle') {
       startCountdown();
     }
-  }, [isEmergency]);
+  }, [classification]);
 
   // Fetch reaction steps whenever an emergency is classified
   useEffect(() => {
