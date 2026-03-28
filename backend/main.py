@@ -324,13 +324,18 @@ async def test_call():
         raise HTTPException(status_code=503, detail="Telegram client not connected")
 
     try:
-        test_text = (
-            "Hello, this is a test call. I want to check whether you can hear me clearly and respond naturally. Please tell me the current status of my request, then ask me one follow-up question. My name is Alex, and I’m calling about an appointment on Tuesday at 3:30 PM. If you understood that, repeat the day and time back to me. Also, please confirm whether you can handle rescheduling, cancellations, and general questions. Thank you."
-        )
+        test_report = {
+            "emergency_type": "test",
+            "severity": "low",
+            "objective_description": "This is a test alert from Seraphim. No real emergency.",
+            "location": None,
+            "recommended_actions": [],
+        }
+        test_text = report_processor.format_report(test_report)
         audio_path = await tts_service.generate_audio(test_text)
         operator_id_raw = os.getenv("OPERATOR_TELEGRAM_ID", "0")
         operator_id = int(operator_id_raw) if operator_id_raw.isdigit() else operator_id_raw
-        call_id = await telegram_caller.make_call(operator_id, audio_path)
+        call_id = await telegram_caller.make_call(operator_id, audio_path, report_data=test_report)
 
         return CallStatus(
             status="test_call_initiated",

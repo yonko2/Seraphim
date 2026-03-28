@@ -18,6 +18,7 @@ import { GeminiService } from '../services/ai/GeminiService';
 import SensorMonitor from '../components/SensorMonitor';
 import CameraViewComponent from '../components/CameraView';
 import HealthMetrics from '../components/HealthMetrics';
+import * as Location from 'expo-location';
 import type { DisasterClassification } from '../types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -32,7 +33,6 @@ const VictimDashboard: React.FC = () => {
     isMonitoring,
     startMonitoring,
     stopMonitoring,
-    triggerManualEmergency,
     activeEmergency,
   } = useEmergencyDetection();
 
@@ -41,6 +41,14 @@ const VictimDashboard: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [classification, setClassification] = useState<DisasterClassification | null>(null);
   const geminiRef = useRef<GeminiService | null>(null);
+  const [reactionSteps, setReactionSteps] = useState<string[]>([]);
+
+  // GPS location state
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    address: string | null;
+  } | null>(null);
 
   // Countdown & call state
   const [callState, setCallState] = useState<CallState>('idle');
@@ -48,6 +56,27 @@ const VictimDashboard: React.FC = () => {
   const [callMessage, setCallMessage] = useState('');
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
+
+  // Fetch GPS location on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        const { latitude, longitude } = loc.coords;
+        let address: string | null = null;
+        try {
+          const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
+          if (geo) {
+            const parts = [geo.street, geo.city, geo.region, geo.country].filter(Boolean);
+            address = parts.join(', ') || null;
+          }
+        } catch {}
+        setUserLocation({ latitude, longitude, address });
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     if (backendUrl) {
@@ -75,6 +104,26 @@ const VictimDashboard: React.FC = () => {
       startCountdown();
     }
   }, [isEmergency]);
+
+  // Fetch reaction steps whenever an emergency is classified
+  useEffect(() => {
+    if (isEmergency && backendUrl && classification) {
+      fetch(`${backendUrl}/api/first-aid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emergency_type: classification.type,
+          description: classification.description || '',
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => setReactionSteps(data.steps || []))
+        .catch((err) => console.warn('[VictimDashboard] First-aid fetch failed:', err));
+    }
+    if (!isEmergency) {
+      setReactionSteps([]);
+    }
+  }, [classification]);
 
   const startCountdown = () => {
     setCallState('countdown');
@@ -128,7 +177,7 @@ const VictimDashboard: React.FC = () => {
         timestamp: Date.now() / 1000,
         emergency_type: classification.type,
         severity: classification.severity,
-        location: null,
+        location: userLocation,
         sensor_data: null,
         health_data: null,
         objective_description: classification.description || 'Emergency detected by AI vision',
@@ -285,10 +334,10 @@ const VictimDashboard: React.FC = () => {
                 {classification.description ? (
                   <Text style={styles.resultDescription}>{classification.description}</Text>
                 ) : null}
-                {classification.instructions && classification.instructions.length > 0 && (
+                {reactionSteps.length > 0 && (
                   <View style={styles.instructionsBox}>
-                    <Text style={styles.instructionsTitle}>⚡ Immediate Actions:</Text>
-                    {classification.instructions.map((step, i) => (
+                    <Text style={styles.instructionsTitle}>⚡ What To Do:</Text>
+                    {reactionSteps.map((step, i) => (
                       <Text key={i} style={styles.instructionStep}>
                         {i + 1}. {step}
                       </Text>
@@ -376,17 +425,6 @@ const VictimDashboard: React.FC = () => {
 
         {/* Health Metrics */}
         <HealthMetrics />
-
-        {/* Emergency Button */}
-        <TouchableOpacity
-          style={styles.emergencyButton}
-          onPress={triggerManualEmergency}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.emergencyButtonIcon}>🚨</Text>
-          <Text style={styles.emergencyButtonText}>EMERGENCY</Text>
-          <Text style={styles.emergencyButtonSub}>Tap to trigger manual emergency</Text>
-        </TouchableOpacity>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -518,34 +556,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 2,
   },
-  emergencyButton: {
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: '#ff3b30',
-    borderRadius: 20,
-    paddingVertical: 24,
-    alignItems: 'center',
-    shadowColor: '#ff3b30',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  emergencyButtonIcon: {
-    fontSize: 36,
-    marginBottom: 6,
-  },
-  emergencyButtonText: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: 4,
-  },
-  emergencyButtonSub: {
-    fontSize: 12,
-    color: '#ffffffaa',
-    marginTop: 4,
-  },
+  emergencyButton: undefined,
+  emergencyButtonIcon: undefined,
+  emergencyButtonText: undefined,
+  emergencyButtonSub: undefined,
   bottomSpacer: {
     height: 30,
   },

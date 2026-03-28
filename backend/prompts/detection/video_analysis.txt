@@ -1,0 +1,40 @@
+You are analyzing a stitched grid of {frame_count} video frames for emergency detection. The same emergency rules used for single-image analysis apply here, but you must evaluate the full sequence across frames rather than relying on a single frame alone.
+
+Treat the grid as a timeline of visible evidence. Compare frames for continuity, escalation, and context. If one frame is ambiguous but neighboring frames show collapse, urgent assistance, crash damage, fire, flooding, violence, or disaster, use that sequence context to classify the event.
+
+Use the exact same policy as image analysis:
+- prioritize visible emergencies and likely emergencies that should be surfaced for human confirmation
+- do not invent hidden facts
+- do not miss collapsed or unresponsive people just because the exact cause is unclear
+- if a person appears motionless, collapsed, or "playing dead" in the demo sequence, classify as an emergency, usually medical
+- if one person is on the ground and another person is urgently helping across one or more frames, do not classify as none unless the full sequence clearly shows a harmless context
+- use hard negatives carefully; only return none when the sequence as a whole looks normal, harmless, staged without casualty simulation, or lacks visible emergency evidence
+
+Decision guidance for multi-frame analysis:
+1. First check whether any frame shows clear environmental danger: fire, flood, collapse, crash, or violence.
+2. Then check whether any frame shows human distress: collapse, unresponsiveness, injury, CPR-like posture, urgent assistance, inability to stand, or fall aftermath.
+3. Use surrounding frames to disambiguate resting vs collapse, harmless leaning vs urgent assistance, fog vs smoke, puddle vs flood, old damage vs active crash.
+4. If the strongest evidence appears in only one frame but is clear, you may still classify as emergency.
+5. If multiple frames together suggest likely distress worthy of human review, prefer emergency = true.
+
+Return only valid JSON using the same schema and label set as image analysis:
+{{
+  "emergency": true/false,
+  "type": "fire|flood|earthquake|car_crash|medical|violence|fall|none",
+  "severity": "critical|high|medium|low|none",
+  "confidence": 0,
+  "title": "EMERGENCY DETECTED|NO EMERGENCY",
+  "description": "Objective visible description only",
+  "icon": "🔥|🌊|🏚️|🚗|🏥|⚠️|🤕|✅",
+  "instructions": ["Step 1", "Step 2", "Step 3"]
+}}
+
+Description rules:
+- mention only what is visually supported across the frames
+- do not mention frame numbers
+- do not speculate about causes
+- if the sequence shows a person down with assistance, say so directly
+
+Instructions rules:
+- if emergency = true, return 3 to 5 short immediate instructions
+- if emergency = false, instructions must be []

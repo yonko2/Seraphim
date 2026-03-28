@@ -5,6 +5,7 @@ import json
 import base64
 import logging
 import asyncio
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dotenv import load_dotenv
 from PIL import Image
@@ -12,6 +13,16 @@ from PIL import Image
 load_dotenv()
 
 logger = logging.getLogger("seraphim")
+
+PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
+
+
+def _load_prompt(name: str, **kwargs) -> str:
+    """Load a prompt template from the prompts/ directory and format it."""
+    text = (PROMPTS_DIR / name).read_text(encoding="utf-8").strip()
+    if kwargs:
+        text = text.format(**kwargs)
+    return text
 
 
 class RateLimitError(Exception):
@@ -120,34 +131,7 @@ class GeminiService:
         if not self.provider:
             raise RuntimeError("AI service not initialized. Set GROQ_API_KEY or GEMINI_API_KEY in .env")
 
-        prompt = """You are an emergency detection AI. Analyze this image objectively and determine if there is a real emergency situation visible.
-
-Emergency types to look for:
-- fire: flames, smoke, burning structures or objects
-- flood: rising water, submerged areas, water damage
-- earthquake: collapsed buildings, cracked ground, structural damage, debris
-- car_crash: vehicle collisions, overturned cars, road accidents
-- medical: seizures, unconscious person, choking, allergic reactions, bleeding, broken bones, visible fractures or deformed limbs
-- violence: physical assault, fighting, weapons
-- fall: person who has clearly fallen and is injured or unable to get up
-- none: no emergency — normal everyday scene
-
-IMPORTANT: Only flag an emergency if you can clearly see evidence of one. A person simply standing, walking, or sitting is NOT an emergency. Be accurate, not paranoid.
-
-Respond ONLY with valid JSON (no markdown, no backticks):
-{
-    "emergency": true/false,
-    "type": "fire|flood|earthquake|car_crash|medical|violence|fall|none",
-    "severity": "critical|high|medium|low|none",
-    "confidence": 85,
-    "title": "EMERGENCY DETECTED" or "NO EMERGENCY",
-    "description": "Brief objective description of what you see",
-    "icon": "🔥|🌊|🏚️|🚗|🏥|⚠️|🤕|✅",
-    "instructions": ["Step 1", "Step 2", "Step 3"] or []
-}
-
-If emergency is detected, provide 3-5 immediate action instructions.
-If no emergency, set type to "none" and instructions to empty array."""
+        prompt = _load_prompt("detection/image_analysis.txt")
 
         for attempt in range(self.MAX_RETRIES + 1):
             try:
@@ -181,18 +165,7 @@ If no emergency, set type to "none" and instructions to empty array."""
         if not self.provider:
             raise RuntimeError("AI service not initialized. Set GROQ_API_KEY or GEMINI_API_KEY in .env")
 
-        prompt = f"""You are an emergency first aid expert. A bystander has encountered the following emergency:
-
-Type: {emergency_type}
-Description: {description}
-
-Provide 5-8 clear, actionable first aid steps that a non-medical person can follow immediately.
-Each step should be one concise sentence.
-Prioritize life-saving actions first, then comfort/stabilization.
-Do NOT suggest actions requiring medical equipment unless commonly available (e.g., AED).
-
-Respond ONLY with a valid JSON array of strings (no markdown, no backticks):
-["Step 1 text", "Step 2 text", "Step 3 text", ...]"""
+        prompt = _load_prompt("guidance/first_aid.txt", emergency_type=emergency_type, description=description)
 
         for attempt in range(self.MAX_RETRIES + 1):
             try:
@@ -225,12 +198,7 @@ Respond ONLY with a valid JSON array of strings (no markdown, no backticks):
         if not self.provider:
             raise RuntimeError("AI service not initialized. Set GROQ_API_KEY or GEMINI_API_KEY in .env")
 
-        prompt = f"""You are an emergency report processor. Rewrite the following observations into calm, objective, factual language suitable for emergency dispatchers. Remove all emotional language, panic, exclamations, and subjective feelings. Keep only actionable facts.
-
-Raw observations:
-{raw_text}
-
-Respond with ONLY the rewritten text. No markdown, no labels, no extra formatting."""
+        prompt = _load_prompt("processing/panic_filter.txt", raw_text=raw_text)
 
         for attempt in range(self.MAX_RETRIES + 1):
             try:
@@ -262,48 +230,12 @@ Respond with ONLY the rewritten text. No markdown, no labels, no extra formattin
         grid_b64 = self._stitch_frames(frames)
         logger.info(f"Stitched {len(frames)} frames into a single grid image")
 
-        prompt = f"""You are an emergency detection AI. This image is a grid of {len(frames)} consecutive video frames arranged left-to-right, top-to-bottom.
-
-Analyze ALL frames in chronological order. Look for changes over time that indicate a real emergency.
-
-Emergency types to look for:
-- fire: flames appearing/spreading, smoke increasing
-- flood: water rising, areas becoming submerged
-- earthquake: buildings shaking/collapsing, ground cracking, debris falling
-- car_crash: vehicles colliding, spinning out, overturning
-- medical: person having a seizure, collapsing unconscious, choking, visible injuries, broken/deformed limbs, heavy bleeding
-- violence: physical assault, fighting escalating, weapons visible
-- fall: person falling and remaining on the ground injured
-- none: no emergency — normal activity
-
-IMPORTANT: Only flag an emergency if the frames clearly show one happening. People simply walking, standing, sitting, or going about normal activities is NOT an emergency. Be accurate, not paranoid.
-
-Do NOT reference frame numbers in your response. Write in plain language.
-
-Respond ONLY with valid JSON (no markdown, no backticks):
-{{
-    "emergency": true/false,
-    "type": "fire|flood|earthquake|car_crash|medical|violence|fall|none",
-    "severity": "critical|high|medium|low|none",
-    "confidence": 85,
-    "title": "EMERGENCY DETECTED" or "NO EMERGENCY",
-    "description": "Plain language description of what is happening across the video",
-    "icon": "🔥|🌊|🏚️|🚗|🏥|⚠️|🤕|✅",
-    "instructions": ["Step 1", "Step 2", "Step 3"] or []
-}}
-
-If emergency is detected, provide 3-5 clear actionable instructions.
-If no emergency, set type to "none" and instructions to empty array."""
+        prompt = _load_prompt("detection/video_analysis.txt", frame_count=len(frames))
 
         for attempt in range(self.MAX_RETRIES + 1):
             try:
                 if self.provider == "groq":
-                    # Use system + user messages so analysis stays internal
-                    system_msg = (
-                        "You are an objective emergency detection AI. Analyze video frame grids carefully. "
-                        "Only flag real emergencies you can clearly see. Normal human activity is NOT an emergency. "
-                        "Never mention frame numbers in your output."
-                    )
+                    system_msg = _load_prompt("detection/video_system.txt")
                     messages = [
                         {"role": "system", "content": system_msg},
                         {

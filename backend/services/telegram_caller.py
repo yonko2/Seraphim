@@ -73,9 +73,10 @@ class TelegramCaller:
     async def make_call(self, user_id, audio_path: str, report_data: dict = None) -> str:
         """
         Emergency alert flow:
-        1. Ring the operator via Telegram call (grabs attention, may stream audio)
-        2. Send voice message with full TTS report (guaranteed delivery)
-        3. Send rich text summary with emergency details
+        1. Ring the operator via Telegram call and stream TTS audio
+        2. Wait for stream to finish or call to be declined
+        3. Send voice message with full TTS report (guaranteed delivery)
+        4. Send text summary with emergency details
         """
         call_id = str(uuid.uuid4())
 
@@ -89,8 +90,29 @@ class TelegramCaller:
                 None, convert_to_ogg, audio_path
             )
 
-            # Step 1: Ring the operator (best-effort VoIP audio)
+            # Step 1: Ring and stream audio — wait for it to complete
             call_connected = False
+            call_done = asyncio.Event()
+
+            async def on_stream_finished(client: PyTgCalls, update: StreamEnded):
+                if update.chat_id == chat_id:
+                    logger.info(f"📞 Stream finished for {chat_id}")
+                    try:
+                        await asyncio.sleep(1)
+                        await client.leave_call(chat_id)
+                    except Exception:
+                        pass
+                    call_done.set()
+
+            async def on_call_discarded(client: PyTgCalls, update: ChatUpdate):
+                if update.chat_id == chat_id:
+                    logger.info(f"📞 Call ended/declined for {chat_id}")
+                    call_done.set()
+
+            # Register temporary handlers for this specific call
+            self.pytgcalls.on_update(filters.stream_end())(on_stream_finished)
+            self.pytgcalls.on_update(filters.chat_update(ChatUpdate.Status.DISCARDED_CALL))(on_call_discarded)
+
             try:
                 await self.pytgcalls.play(
                     chat_id,
@@ -101,7 +123,18 @@ class TelegramCaller:
                     config=CallConfig(timeout=30),
                 )
                 call_connected = True
-                logger.info(f"📞 Call ringing {user_id} — VoIP audio may play")
+                logger.info(f"📞 Call ringing {user_id} — waiting for audio to finish")
+
+                # Wait up to 120s for the call to complete (stream end or declined)
+                try:
+                    await asyncio.wait_for(call_done.wait(), timeout=120)
+                except asyncio.TimeoutError:
+                    logger.warning(f"📞 Call timeout for {chat_id}, leaving call")
+                    try:
+                        await self.pytgcalls.leave_call(chat_id)
+                    except Exception:
+                        pass
+
             except Exception as e:
                 logger.warning(f"📞 Call attempt failed: {e}")
 
@@ -112,13 +145,13 @@ class TelegramCaller:
                 "message": "Alerting operator",
             }
 
-            # Step 2: Send voice message (always works — this is the reliable report delivery)
+            # Step 2: Send voice message (always works — reliable report delivery)
             await self.client.send_file(
                 entity, audio_path, voice_note=True, attributes=[]
             )
             logger.info(f"🔊 Voice message sent to {user_id}")
 
-            # Step 3: Send rich text alert with emergency details
+            # Step 3: Send text alert with emergency details
             text_msg = self._format_telegram_message(report_data)
             await self.client.send_message(entity, text_msg)
             logger.info(f"📝 Text alert sent to {user_id}")
@@ -143,53 +176,37 @@ class TelegramCaller:
             raise
 
     def _format_telegram_message(self, report_data: dict = None) -> str:
-        """Format Telegram message as an emergency dispatch report."""
+        """Compact emergency dispatch message for Telegram."""
         if not report_data:
-            return (
-                "🚨 **EMERGENCY DISPATCH** 🚨\n\n"
-                "An emergency has been detected and requires immediate response.\n"
-                "▶️ **Play the voice message above** for the full dispatch report."
-            )
+            return "🚨 **EMERGENCY** — Details in voice message above."
 
-        emergency_type = report_data.get("emergency_type", "unknown").replace("_", " ").upper()
+        etype = report_data.get("emergency_type", "unknown").replace("_", " ").upper()
         severity = report_data.get("severity", "unknown").upper()
         description = report_data.get("objective_description", "")
-        actions = report_data.get("recommended_actions", [])
         location = report_data.get("location")
 
         icon_map = {
             "FIRE": "🔥", "FLOOD": "🌊", "EARTHQUAKE": "🏚️", "FALL": "🤕",
             "CAR CRASH": "🚗", "MEDICAL": "🏥", "VIOLENCE": "⚠️",
         }
-        icon = icon_map.get(emergency_type, "🚨")
+        icon = icon_map.get(etype, "🚨")
 
         lines = [
-            f"🚨 **EMERGENCY DISPATCH REPORT** 🚨",
-            "",
-            f"{icon} **Incident:** {emergency_type}",
-            f"⚡ **Severity:** {severity}",
+            f"🚨 **{etype}** — {severity}",
         ]
 
         if location:
             address = location.get("address")
             if address:
-                lines.append(f"📍 **Location:** {address}")
+                lines.append(f"📍 {address}")
             else:
                 lat = location.get("latitude")
                 lon = location.get("longitude")
                 if lat and lon:
-                    lines.append(f"📍 **Coordinates:** {lat}, {lon}")
+                    lines.append(f"📍 {lat}, {lon}")
 
         if description:
-            lines.append(f"\n📋 **Situation Report:**\n{description}")
-
-        if actions:
-            lines.append("\n🛟 **Required Response Actions:**")
-            for i, action in enumerate(actions, 1):
-                lines.append(f"  {i}. {action}")
-
-        lines.append("\n▶️ **Play the voice message above** for the full audio dispatch.")
-        lines.append("\n⚠️ **Immediate response required** — dispatched via Seraphim Emergency System")
+            lines.append(f"{icon} {description}")
 
         return "\n".join(lines)
 
