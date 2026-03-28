@@ -17,11 +17,11 @@ const MainTabs: React.FC = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#1a1a1a',
-          borderTopColor: '#333',
+          backgroundColor: '#111827',
+          borderTopColor: '#1E293B',
         },
-        tabBarActiveTintColor: '#ff3b30',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: '#FF5A4F',
+        tabBarInactiveTintColor: '#94A3B8',
       }}
     >
       <Tab.Screen

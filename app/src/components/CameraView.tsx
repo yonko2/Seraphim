@@ -23,11 +23,11 @@ interface CameraViewProps {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ff3b30',
-  high: '#ff9500',
+  critical: '#FF5A4F',
+  high: '#F59E0B',
   medium: '#ffd60a',
-  low: '#30d158',
-  none: '#888',
+  low: '#22C55E',
+  none: '#94A3B8',
 };
 
 export default function CameraViewComponent({
@@ -63,6 +63,7 @@ export default function CameraViewComponent({
         quality: 0.7,
       });
       if (photo?.base64 && onCapture) {
+        console.log(`[CameraView] Captured photo: ${photo.width}x${photo.height}, base64 length: ${photo.base64.length}`);
         onCapture(photo.base64);
       }
     } catch (err) {
@@ -148,7 +149,7 @@ export default function CameraViewComponent({
   if (!permission) {
     return (
       <View style={styles.card}>
-        <ActivityIndicator color="#007AFF" />
+        <ActivityIndicator color="#38BDF8" />
         <Text style={styles.permText}>Checking camera permissions…</Text>
       </View>
     );
@@ -181,7 +182,7 @@ export default function CameraViewComponent({
         )}
         {isAnalyzing && !recording && (
           <View style={styles.analyzingBadge}>
-            <ActivityIndicator size="small" color="#007AFF" />
+            <ActivityIndicator size="small" color="#38BDF8" />
             <Text style={styles.analyzingText}>Analyzing…</Text>
           </View>
         )}
@@ -200,19 +201,19 @@ export default function CameraViewComponent({
             <View
               style={[
                 styles.classificationBadge,
-                { backgroundColor: (SEVERITY_COLORS[classification.severity] || '#888') + '22' },
+                { backgroundColor: (SEVERITY_COLORS[classification.severity] || '#94A3B8') + '22' },
               ]}
             >
               <View
                 style={[
                   styles.severityDot,
-                  { backgroundColor: SEVERITY_COLORS[classification.severity] || '#888' },
+                  { backgroundColor: SEVERITY_COLORS[classification.severity] || '#94A3B8' },
                 ]}
               />
               <Text
                 style={[
                   styles.classificationType,
-                  { color: SEVERITY_COLORS[classification.severity] || '#888' },
+                  { color: SEVERITY_COLORS[classification.severity] || '#94A3B8' },
                 ]}
               >
                 {classification.type.replace('_', ' ').toUpperCase()}
@@ -268,7 +269,7 @@ export default function CameraViewComponent({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   },
   emergencyBorder: {
     borderWidth: 2,
-    borderColor: '#ff3b30',
+    borderColor: '#FF5A4F',
   },
   header: {
     flexDirection: 'row',
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -293,13 +294,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#007AFF22',
+    backgroundColor: '#38BDF822',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   analyzingText: {
-    color: '#007AFF',
+    color: '#38BDF8',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ff3b3022',
+    backgroundColor: '#FF5A4F22',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -316,10 +317,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ff3b30',
+    backgroundColor: '#FF5A4F',
   },
   recordingText: {
-    color: '#ff3b30',
+    color: '#FF5A4F',
     fontSize: 12,
     fontWeight: '800',
   },
@@ -327,12 +328,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     position: 'relative',
-    height: 220,
-    backgroundColor: '#000',
+    aspectRatio: 16 / 9,
+    backgroundColor: '#0F172A',
   },
   camera: {
     flex: 1,
-    height: 220,
     width: '100%',
   },
   overlay: {
@@ -362,28 +362,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   confidence: {
-    color: '#ffffffcc',
+    color: '#F8FAFCcc',
     fontSize: 12,
     fontWeight: '600',
   },
   description: {
-    color: '#ffffffcc',
+    color: '#F8FAFCcc',
     fontSize: 12,
     marginTop: 4,
-    textShadowColor: '#000',
+    textShadowColor: '#0F172A',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
   captureBtn: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#38BDF8',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   captureBtnText: {
-    color: '#fff',
+    color: '#F8FAFC',
     fontWeight: '700',
     fontSize: 16,
   },
@@ -392,36 +392,36 @@ const styles = StyleSheet.create({
   },
   recordBtn: {
     flex: 1,
-    backgroundColor: '#333',
+    backgroundColor: '#1E293B',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#ff3b30',
+    borderColor: '#FF5A4F',
   },
   recordBtnActive: {
-    backgroundColor: '#ff3b3033',
+    backgroundColor: '#FF5A4F33',
   },
   recordBtnText: {
-    color: '#ff3b30',
+    color: '#FF5A4F',
     fontWeight: '700',
     fontSize: 16,
   },
   progressBarBg: {
     marginTop: 8,
     height: 6,
-    backgroundColor: '#333',
+    backgroundColor: '#1E293B',
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#ff3b30',
+    backgroundColor: '#FF5A4F',
     borderRadius: 3,
   },
   permText: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 13,
     marginTop: 10,
     textAlign: 'center',
@@ -432,14 +432,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   permTitle: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
     marginBottom: 6,
   },
   permSubtitle: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
@@ -447,13 +447,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   permButton: {
-    backgroundColor: '#007AFF22',
+    backgroundColor: '#38BDF822',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
   },
   permButtonText: {
-    color: '#007AFF',
+    color: '#38BDF8',
     fontSize: 15,
     fontWeight: '700',
   },

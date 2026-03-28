@@ -19,7 +19,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <View style={styles.header}>
         <Text style={styles.title}>SERAPHIM</Text>
         <Text style={styles.subtitle}>Emergency Assistant</Text>
@@ -55,7 +55,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
@@ -66,12 +66,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#F8FAFC',
     letterSpacing: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
+    color: '#94A3B8',
     marginTop: 8,
     letterSpacing: 2,
   },
@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
   victimCard: {
     backgroundColor: '#1a0a0a',
     borderWidth: 1,
-    borderColor: '#ff3b30',
+    borderColor: '#FF5A4F',
   },
   helperCard: {
     backgroundColor: '#0a0a1a',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#38BDF8',
   },
   cardEmoji: {
     fontSize: 48,
@@ -100,12 +100,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#F8FAFC',
     marginBottom: 8,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#aaa',
+    color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 20,
   },

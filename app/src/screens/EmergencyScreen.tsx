@@ -15,11 +15,11 @@ import EmergencyReportComponent from '../components/EmergencyReport';
 type CallStatus = 'connecting' | 'in_call' | 'completed' | 'failed' | 'idle';
 
 const STATUS_CONFIG: Record<CallStatus, { label: string; color: string; icon: string }> = {
-  idle: { label: 'Waiting', color: '#888', icon: '⏳' },
+  idle: { label: 'Waiting', color: '#94A3B8', icon: '⏳' },
   connecting: { label: 'Connecting…', color: '#ffd60a', icon: '📡' },
-  in_call: { label: 'In Call', color: '#30d158', icon: '📞' },
-  completed: { label: 'Call Completed', color: '#007AFF', icon: '✅' },
-  failed: { label: 'Call Failed', color: '#ff3b30', icon: '❌' },
+  in_call: { label: 'In Call', color: '#22C55E', icon: '📞' },
+  completed: { label: 'Call Completed', color: '#38BDF8', icon: '✅' },
+  failed: { label: 'Call Failed', color: '#FF5A4F', icon: '❌' },
 };
 
 function formatElapsed(seconds: number): string {
@@ -145,7 +145,7 @@ const EmergencyScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
   },
   content: {
     paddingTop: 60,
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a0000',
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#ff3b30',
+    borderColor: '#FF5A4F',
   },
   headerIcon: {
     fontSize: 48,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#ff3b30',
+    color: '#FF5A4F',
     letterSpacing: 3,
   },
   timerContainer: {
@@ -178,21 +178,21 @@ const styles = StyleSheet.create({
   timerLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#888',
+    color: '#94A3B8',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   timer: {
     fontSize: 42,
     fontWeight: '200',
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontVariant: ['tabular-nums'],
     marginTop: 4,
   },
   statusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: '#888',
+    color: '#94A3B8',
     fontWeight: '600',
   },
   statusValue: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: '#333',
+    backgroundColor: '#1E293B',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#ff3b30',
+    color: '#FF5A4F',
   },
   bottomSpacer: {
     height: 30,

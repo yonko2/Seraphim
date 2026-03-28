@@ -18,9 +18,9 @@ function getMagnitudeStatus(magnitude: number, fallDetected: boolean): 'normal' 
 }
 
 const STATUS_COLORS = {
-  normal: '#30d158',
+  normal: '#22C55E',
   elevated: '#ffd60a',
-  fall: '#ff3b30',
+  fall: '#FF5A4F',
 } as const;
 
 export default function SensorMonitor() {
@@ -53,9 +53,9 @@ export default function SensorMonitor() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>📡 Sensor Monitor</Text>
-        <View style={[styles.badge, { backgroundColor: isActive ? '#30d15833' : '#88888833' }]}>
-          <View style={[styles.badgeDot, { backgroundColor: isActive ? '#30d158' : '#888' }]} />
-          <Text style={[styles.badgeText, { color: isActive ? '#30d158' : '#888' }]}>
+        <View style={[styles.badge, { backgroundColor: isActive ? '#22C55E33' : '#94A3B833' }]}>
+          <View style={[styles.badgeDot, { backgroundColor: isActive ? '#22C55E' : '#94A3B8' }]} />
+          <Text style={[styles.badgeText, { color: isActive ? '#22C55E' : '#94A3B8' }]}>
             {isActive ? 'Monitoring' : 'Inactive'}
           </Text>
         </View>
@@ -128,11 +128,11 @@ export default function SensorMonitor() {
 
       {/* Toggle Button */}
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: isActive ? '#ff3b3022' : '#007AFF22' }]}
+        style={[styles.button, { backgroundColor: isActive ? '#FF5A4F22' : '#38BDF822' }]}
         onPress={handleToggle}
         activeOpacity={0.7}
       >
-        <Text style={[styles.buttonText, { color: isActive ? '#ff3b30' : '#007AFF' }]}>
+        <Text style={[styles.buttonText, { color: isActive ? '#FF5A4F' : '#38BDF8' }]}>
           {isActive ? '■  Stop Monitoring' : '▶  Start Monitoring'}
         </Text>
       </TouchableOpacity>
@@ -152,7 +152,7 @@ function AxisValue({ label, value, unit }: { label: string; value: number; unit?
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -206,19 +206,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   axisLabel: {
-    color: '#666',
+    color: '#94A3B8',
     fontSize: 11,
     fontWeight: '600',
     marginBottom: 2,
   },
   axisValue: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   axisUnit: {
-    color: '#666',
+    color: '#94A3B8',
     fontSize: 10,
     marginTop: 1,
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   magnitudeLabel: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 11,
     fontWeight: '500',
     width: 68,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   magnitudeBarBg: {
     flex: 1,
     height: 6,
-    backgroundColor: '#333',
+    backgroundColor: '#1E293B',
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -258,24 +258,24 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   baroValue: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 22,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   baroUnit: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 13,
   },
   noData: {
-    color: '#555',
+    color: '#475569',
     fontSize: 13,
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 4,
   },
   alertBanner: {
-    backgroundColor: '#ff3b3022',
+    backgroundColor: '#FF5A4F22',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertText: {
-    color: '#ff3b30',
+    color: '#FF5A4F',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 1,

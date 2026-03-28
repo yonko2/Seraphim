@@ -10,9 +10,9 @@ import { useHealthData } from '../hooks/useHealthData';
 type MetricStatus = 'normal' | 'warning' | 'critical';
 
 const STATUS_COLORS: Record<MetricStatus, string> = {
-  normal: '#30d158',
+  normal: '#22C55E',
   warning: '#ffd60a',
-  critical: '#ff3b30',
+  critical: '#FF5A4F',
 };
 
 function getHeartRateStatus(hr: number): MetricStatus {
@@ -44,7 +44,7 @@ interface MetricCardProps {
 function MetricCard({ icon, label, value, unit, getStatus }: MetricCardProps) {
   const available = value != null;
   const status = available && getStatus ? getStatus(value) : 'normal';
-  const color = available ? STATUS_COLORS[status] : '#555';
+  const color = available ? STATUS_COLORS[status] : '#475569';
 
   return (
     <View style={styles.metricCard}>
@@ -83,9 +83,9 @@ export default function HealthMetrics() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>🩺 Health Metrics</Text>
-        <View style={[styles.badge, { backgroundColor: isMonitoring ? '#30d15833' : '#88888833' }]}>
-          <View style={[styles.badgeDot, { backgroundColor: isMonitoring ? '#30d158' : '#888' }]} />
-          <Text style={[styles.badgeText, { color: isMonitoring ? '#30d158' : '#888' }]}>
+        <View style={[styles.badge, { backgroundColor: isMonitoring ? '#22C55E33' : '#94A3B833' }]}>
+          <View style={[styles.badgeDot, { backgroundColor: isMonitoring ? '#22C55E' : '#94A3B8' }]} />
+          <Text style={[styles.badgeText, { color: isMonitoring ? '#22C55E' : '#94A3B8' }]}>
             {isMonitoring ? 'Connected' : 'Offline'}
           </Text>
         </View>
@@ -143,12 +143,12 @@ export default function HealthMetrics() {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isMonitoring ? '#ff3b3022' : '#007AFF22' },
+              { backgroundColor: isMonitoring ? '#FF5A4F22' : '#38BDF822' },
             ]}
             onPress={handleToggle}
             activeOpacity={0.7}
           >
-            <Text style={[styles.buttonText, { color: isMonitoring ? '#ff3b30' : '#007AFF' }]}>
+            <Text style={[styles.buttonText, { color: isMonitoring ? '#FF5A4F' : '#38BDF8' }]}>
               {isMonitoring ? '■  Disconnect' : '▶  Connect Wearable'}
             </Text>
           </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function HealthMetrics() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
     borderRadius: 12,
     padding: 12,
     marginVertical: 4,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricCard: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricLabel: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   metricUnit: {
-    color: '#666',
+    color: '#94A3B8',
     fontSize: 11,
     marginTop: 2,
   },
@@ -239,27 +239,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: '#F8FAFC',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 6,
   },
   emptySubtitle: {
-    color: '#888',
+    color: '#94A3B8',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: 16,
   },
   errorBanner: {
-    backgroundColor: '#ff3b3022',
+    backgroundColor: '#FF5A4F22',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 12,
   },
   errorText: {
-    color: '#ff3b30',
+    color: '#FF5A4F',
     fontSize: 12,
     fontWeight: '600',
   },

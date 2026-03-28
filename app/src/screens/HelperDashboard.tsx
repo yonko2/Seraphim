@@ -15,6 +15,7 @@ import { DisasterDetector } from '../services/ai/DisasterDetector';
 import CameraViewComponent from '../components/CameraView';
 import FirstAidGuide from '../components/FirstAidGuide';
 import type { DisasterClassification, EmergencyType } from '../types';
+import TopNavbar from '../components/TopNavbar';
 
 const HelperDashboard: React.FC = () => {
   const backendUrl = useStore((s) => s.backendUrl);
@@ -133,7 +134,8 @@ const HelperDashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <TopNavbar currentPage="Helper" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.screenTitle}>🤝 Helper Mode</Text>
         <Text style={styles.subtitle}>Point camera at the scene to analyze</Text>
@@ -153,7 +155,7 @@ const HelperDashboard: React.FC = () => {
           disabled={isLoadingGuide}
         >
           {isLoadingGuide ? (
-            <ActivityIndicator color="#007AFF" size="small" />
+            <ActivityIndicator color="#38BDF8" size="small" />
           ) : (
             <Text style={styles.analyzeButtonText}>
               🔍 {hasClassification ? 'Get First Aid Guidance' : 'Capture Image First'}
@@ -178,7 +180,7 @@ const HelperDashboard: React.FC = () => {
           disabled={isAlerting}
         >
           {isAlerting ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator color="#F8FAFC" size="small" />
           ) : (
             <>
               <Text style={styles.alertButtonIcon}>🚨</Text>
@@ -196,34 +198,34 @@ const HelperDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
   },
   content: {
-    paddingTop: 56,
+    paddingTop: 12,
     paddingBottom: 20,
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#F8FAFC',
     marginLeft: 20,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
+    color: '#94A3B8',
     marginLeft: 20,
     marginBottom: 12,
   },
   analyzeButton: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#007AFF22',
+    backgroundColor: '#38BDF822',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#007AFF44',
+    borderColor: '#38BDF844',
   },
   analyzeButtonDisabled: {
     opacity: 0.5,
@@ -231,12 +233,12 @@ const styles = StyleSheet.create({
   analyzeButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#007AFF',
+    color: '#38BDF8',
   },
   alertButton: {
     marginHorizontal: 16,
     marginTop: 16,
-    backgroundColor: '#ff3b30',
+    backgroundColor: '#FF5A4F',
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center',
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
   alertButtonText: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#F8FAFC',
   },
   bottomSpacer: {
     height: 30,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useStore } from '../store/useStore';
 import { BackendClient } from '../services/api/BackendClient';
+import TopNavbar from '../components/TopNavbar';
 
 const SettingsScreen: React.FC = () => {
   const store = useStore();
@@ -58,6 +59,7 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TopNavbar currentPage="Settings" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.screenTitle}>⚙️ Settings</Text>
 
@@ -127,7 +129,7 @@ const SettingsScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             {isTesting ? (
-              <ActivityIndicator color="#007AFF" size="small" />
+              <ActivityIndicator color="#38BDF8" size="small" />
             ) : (
               <Text style={styles.testButtonText}>📞 Test Call</Text>
             )}
@@ -151,29 +153,29 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
   },
   content: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 12,
   },
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#F8FAFC',
     marginBottom: 24,
   },
   sectionHeader: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#888',
+    color: '#94A3B8',
     letterSpacing: 1.5,
     marginBottom: 8,
     marginTop: 16,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#111827',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -181,18 +183,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#F8FAFC',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#ffffff',
+    color: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#1E293B',
     marginBottom: 16,
   },
   sensitivityHeader: {
@@ -204,18 +206,18 @@ const styles = StyleSheet.create({
   sensitivityValue: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#38BDF8',
   },
   sliderTrack: {
     height: 6,
-    backgroundColor: '#333',
+    backgroundColor: '#1E293B',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 14,
   },
   sliderFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#38BDF8',
     borderRadius: 3,
   },
   sliderButtons: {
@@ -227,24 +229,24 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0F172A',
     alignItems: 'center',
   },
   sliderBtnActive: {
-    backgroundColor: '#007AFF22',
+    backgroundColor: '#38BDF822',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#38BDF8',
   },
   sliderBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#888',
+    color: '#94A3B8',
   },
   sliderBtnTextActive: {
-    color: '#007AFF',
+    color: '#38BDF8',
   },
   testButton: {
-    backgroundColor: '#007AFF22',
+    backgroundColor: '#38BDF822',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
   testButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#007AFF',
+    color: '#38BDF8',
   },
   helperText: {
     fontSize: 12,
@@ -261,7 +263,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveButton: {
-    backgroundColor: '#ff3b30',
+    backgroundColor: '#FF5A4F',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#F8FAFC',
   },
   bottomSpacer: {
     height: 40,
