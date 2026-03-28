@@ -7,6 +7,7 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +21,10 @@ import HealthMetrics from '../components/HealthMetrics';
 import type { DisasterClassification } from '../types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
+
+const COUNTDOWN_SECONDS = 10;
+
+type CallState = 'idle' | 'countdown' | 'calling' | 'sent' | 'cancelled' | 'failed';
 
 const VictimDashboard: React.FC = () => {
   const navigation = useNavigation<NavProp>();
@@ -37,6 +42,13 @@ const VictimDashboard: React.FC = () => {
   const [classification, setClassification] = useState<DisasterClassification | null>(null);
   const geminiRef = useRef<GeminiService | null>(null);
 
+  // Countdown & call state
+  const [callState, setCallState] = useState<CallState>('idle');
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const [callMessage, setCallMessage] = useState('');
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     if (backendUrl) {
       geminiRef.current = new GeminiService(backendUrl);
@@ -45,7 +57,6 @@ const VictimDashboard: React.FC = () => {
     }
   }, [backendUrl]);
 
-  // Navigate to Emergency screen when emergency is active
   useEffect(() => {
     if (activeEmergency) {
       navigation.navigate('Emergency');
@@ -54,12 +65,128 @@ const VictimDashboard: React.FC = () => {
 
   const analyzingRef = useRef(false);
 
+  // Start countdown when emergency is detected
+  const isEmergency = classification != null &&
+    classification.type !== 'none' &&
+    classification.severity !== 'none';
+
+  useEffect(() => {
+    if (isEmergency && callState === 'idle') {
+      startCountdown();
+    }
+  }, [isEmergency]);
+
+  const startCountdown = () => {
+    setCallState('countdown');
+    setCountdown(COUNTDOWN_SECONDS);
+    progressAnim.setValue(1);
+
+    Animated.timing(progressAnim, {
+      toValue: 0,
+      duration: COUNTDOWN_SECONDS * 1000,
+      useNativeDriver: false,
+    }).start();
+
+    let remaining = COUNTDOWN_SECONDS;
+    countdownRef.current = setInterval(() => {
+      remaining -= 1;
+      setCountdown(remaining);
+      if (remaining <= 0) {
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        countdownRef.current = null;
+        sendEmergencyReport();
+      }
+    }, 1000);
+  };
+
+  const cancelCountdown = () => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    progressAnim.stopAnimation();
+    setCallState('cancelled');
+    setCallMessage('Emergency call cancelled');
+    setTimeout(() => {
+      setCallState('idle');
+      setCallMessage('');
+    }, 3000);
+  };
+
+  const sendEmergencyReport = async () => {
+    setCallState('calling');
+    setCallMessage('📞 Connecting to emergency services…');
+
+    if (!classification || !backendUrl) {
+      setCallState('failed');
+      setCallMessage('No analysis data or backend URL');
+      return;
+    }
+
+    try {
+      const report = {
+        timestamp: Date.now() / 1000,
+        emergency_type: classification.type,
+        severity: classification.severity,
+        location: null,
+        sensor_data: null,
+        health_data: null,
+        objective_description: classification.description || 'Emergency detected by AI vision',
+        recommended_actions: classification.instructions || [],
+        raw_observations: [
+          `AI Confidence: ${(classification.confidence * 100).toFixed(0)}%`,
+          `Detection type: ${classification.type}`,
+        ],
+      };
+
+      const response = await fetch(`${backendUrl}/emergency`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => 'Unknown error');
+        throw new Error(errText);
+      }
+
+      const result = await response.json();
+      setCallState('sent');
+      setCallMessage(`✅ Emergency alert sent! Call ID: ${result.call_id || 'N/A'}`);
+      // Reset after 5s so next emergency can trigger countdown
+      setTimeout(() => {
+        setCallState('idle');
+        setCallMessage('');
+        setClassification(null);
+      }, 5000);
+    } catch (error) {
+      console.error('[VictimDashboard] Emergency report failed:', error);
+      setCallState('failed');
+      setCallMessage(`❌ Failed: ${String(error)}`);
+      // Reset after 5s so user can retry
+      setTimeout(() => {
+        setCallState('idle');
+        setCallMessage('');
+        setClassification(null);
+      }, 5000);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
   const handleCapture = useCallback(async (base64: string) => {
     const gemini = geminiRef.current;
     if (!gemini || analyzingRef.current) return;
 
     analyzingRef.current = true;
     setIsAnalyzing(true);
+    setCallState('idle');
+    setCallMessage('');
     try {
       const result = await gemini.classifyImage(base64);
       setClassification(result);
@@ -78,6 +205,8 @@ const VictimDashboard: React.FC = () => {
 
     analyzingRef.current = true;
     setIsAnalyzing(true);
+    setCallState('idle');
+    setCallMessage('');
     try {
       const result = await gemini.classifyVideo(frames);
       setClassification(result);
@@ -181,6 +310,67 @@ const VictimDashboard: React.FC = () => {
                 </View>
               </View>
             ) : null}
+          </View>
+        )}
+
+        {/* Countdown / Call Status Panel */}
+        {callState === 'countdown' && (
+          <View style={styles.countdownPanel}>
+            <Text style={styles.countdownTitle}>📞 Calling emergency in {countdown}s</Text>
+            <Text style={styles.countdownSub}>
+              A Telegram call and message will be sent to the operator
+            </Text>
+            <View style={styles.countdownBarBg}>
+              <Animated.View
+                style={[
+                  styles.countdownBarFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={cancelCountdown}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelButtonText}>❌ CANCEL CALL</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {callState === 'calling' && (
+          <View style={styles.callingPanel}>
+            <Text style={styles.callingText}>📞 {callMessage}</Text>
+          </View>
+        )}
+
+        {callState === 'sent' && (
+          <View style={styles.sentPanel}>
+            <Text style={styles.sentText}>{callMessage}</Text>
+          </View>
+        )}
+
+        {callState === 'cancelled' && (
+          <View style={styles.cancelledPanel}>
+            <Text style={styles.cancelledText}>{callMessage}</Text>
+          </View>
+        )}
+
+        {callState === 'failed' && (
+          <View style={styles.failedPanel}>
+            <Text style={styles.failedText}>{callMessage}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={sendEmergencyReport}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.retryButtonText}>🔄 Retry</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -358,6 +548,137 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 30,
+  },
+  // Countdown panel
+  countdownPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#1a1000',
+    borderWidth: 2,
+    borderColor: '#ff9500',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  countdownTitle: {
+    color: '#ff9500',
+    fontSize: 20,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  countdownSub: {
+    color: '#999',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  countdownBarBg: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#333',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 14,
+  },
+  countdownBarFill: {
+    height: '100%',
+    backgroundColor: '#ff9500',
+    borderRadius: 4,
+  },
+  cancelButton: {
+    backgroundColor: '#ff3b3022',
+    borderWidth: 2,
+    borderColor: '#ff3b30',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#ff3b30',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  // Calling panel
+  callingPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#1a1a00',
+    borderWidth: 2,
+    borderColor: '#ff9500',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  callingText: {
+    color: '#ff9500',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  // Sent panel
+  sentPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#112211',
+    borderWidth: 2,
+    borderColor: '#30d158',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  sentText: {
+    color: '#30d158',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  // Cancelled panel
+  cancelledPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 2,
+    borderColor: '#666',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  cancelledText: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  // Failed panel
+  failedPanel: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#3a1111',
+    borderWidth: 2,
+    borderColor: '#ff3b30',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  failedText: {
+    color: '#ff3b30',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: '#ff3b3022',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  retryButtonText: {
+    color: '#ff3b30',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
 

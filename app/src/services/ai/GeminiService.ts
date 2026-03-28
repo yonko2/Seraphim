@@ -172,7 +172,7 @@ export class GeminiService {
 
   private validateEmergencyType(value: string): EmergencyType {
     const valid: EmergencyType[] = [
-      'fall', 'fire', 'flood', 'car_crash', 'medical', 'violence', 'unknown', 'none',
+      'fall', 'fire', 'flood', 'earthquake', 'car_crash', 'medical', 'violence', 'unknown', 'none',
     ];
     return valid.includes(value as EmergencyType) ? (value as EmergencyType) : 'unknown';
   }

@@ -70,12 +70,12 @@ class TelegramCaller:
         await self.client.disconnect()
         self.is_connected = False
 
-    async def make_call(self, user_id, audio_path: str) -> str:
+    async def make_call(self, user_id, audio_path: str, report_data: dict = None) -> str:
         """
         Emergency alert flow:
         1. Ring the operator via Telegram call (grabs attention, may stream audio)
         2. Send voice message with full TTS report (guaranteed delivery)
-        3. Send text summary
+        3. Send rich text summary with emergency details
         """
         call_id = str(uuid.uuid4())
 
@@ -118,14 +118,9 @@ class TelegramCaller:
             )
             logger.info(f"🔊 Voice message sent to {user_id}")
 
-            # Step 3: Send text alert
-            await self.client.send_message(
-                entity,
-                "🚨 **SERAPHIM EMERGENCY ALERT** 🚨\n\n"
-                "An emergency has been detected. "
-                "▶️ **Play the voice message above** for the full emergency report.\n\n"
-                "This is an automated alert from the Seraphim Emergency Assistant.",
-            )
+            # Step 3: Send rich text alert with emergency details
+            text_msg = self._format_telegram_message(report_data)
+            await self.client.send_message(entity, text_msg)
             logger.info(f"📝 Text alert sent to {user_id}")
 
             self.active_calls[call_id] = {
@@ -146,6 +141,57 @@ class TelegramCaller:
                 "message": f"Alert failed: {str(e)}",
             }
             raise
+
+    def _format_telegram_message(self, report_data: dict = None) -> str:
+        """Format Telegram message as an emergency dispatch report."""
+        if not report_data:
+            return (
+                "🚨 **EMERGENCY DISPATCH** 🚨\n\n"
+                "An emergency has been detected and requires immediate response.\n"
+                "▶️ **Play the voice message above** for the full dispatch report."
+            )
+
+        emergency_type = report_data.get("emergency_type", "unknown").replace("_", " ").upper()
+        severity = report_data.get("severity", "unknown").upper()
+        description = report_data.get("objective_description", "")
+        actions = report_data.get("recommended_actions", [])
+        location = report_data.get("location")
+
+        icon_map = {
+            "FIRE": "🔥", "FLOOD": "🌊", "EARTHQUAKE": "🏚️", "FALL": "🤕",
+            "CAR CRASH": "🚗", "MEDICAL": "🏥", "VIOLENCE": "⚠️",
+        }
+        icon = icon_map.get(emergency_type, "🚨")
+
+        lines = [
+            f"🚨 **EMERGENCY DISPATCH REPORT** 🚨",
+            "",
+            f"{icon} **Incident:** {emergency_type}",
+            f"⚡ **Severity:** {severity}",
+        ]
+
+        if location:
+            address = location.get("address")
+            if address:
+                lines.append(f"📍 **Location:** {address}")
+            else:
+                lat = location.get("latitude")
+                lon = location.get("longitude")
+                if lat and lon:
+                    lines.append(f"📍 **Coordinates:** {lat}, {lon}")
+
+        if description:
+            lines.append(f"\n📋 **Situation Report:**\n{description}")
+
+        if actions:
+            lines.append("\n🛟 **Required Response Actions:**")
+            for i, action in enumerate(actions, 1):
+                lines.append(f"  {i}. {action}")
+
+        lines.append("\n▶️ **Play the voice message above** for the full audio dispatch.")
+        lines.append("\n⚠️ **Immediate response required** — dispatched via Seraphim Emergency System")
+
+        return "\n".join(lines)
 
     async def get_call_status(self, call_id: str) -> dict:
         if call_id in self.active_calls:

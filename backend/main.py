@@ -1,4 +1,6 @@
 import os
+import sys
+import glob as globmod
 import asyncio
 import logging
 import traceback
@@ -16,6 +18,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("seraphim")
 
 load_dotenv()
+
+# Auto-detect ffmpeg/ffprobe and add to PATH if not already available
+import shutil
+if not shutil.which("ffprobe"):
+    _ffmpeg_patterns = [
+        os.path.expanduser(r"~\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg*\ffmpeg-*\bin"),
+        r"C:\ffmpeg\bin",
+        r"C:\ProgramData\chocolatey\bin",
+    ]
+    for pattern in _ffmpeg_patterns:
+        for match in globmod.glob(pattern):
+            if os.path.isfile(os.path.join(match, "ffprobe.exe")):
+                os.environ["PATH"] = match + os.pathsep + os.environ.get("PATH", "")
+                logger.info(f"✅ Added ffmpeg to PATH: {match}")
+                break
+        if shutil.which("ffprobe"):
+            break
+    if not shutil.which("ffprobe"):
+        logger.warning("⚠️ ffprobe not found on PATH — VoIP calls will fail")
 
 from services.telegram_caller import TelegramCaller
 from services.tts_service import TTSService
@@ -265,11 +286,12 @@ async def handle_emergency(report: EmergencyReportRequest):
         raise HTTPException(status_code=503, detail="Telegram client not connected")
 
     try:
-        report_text = report_processor.format_report(report.model_dump())
+        report_dict = report.model_dump()
+        report_text = report_processor.format_report(report_dict)
         audio_path = await tts_service.generate_audio(report_text)
         operator_id_raw = os.getenv("OPERATOR_TELEGRAM_ID", "0")
         operator_id = int(operator_id_raw) if operator_id_raw.isdigit() else operator_id_raw
-        call_id = await telegram_caller.make_call(operator_id, audio_path)
+        call_id = await telegram_caller.make_call(operator_id, audio_path, report_data=report_dict)
 
         return CallStatus(
             status="call_initiated",

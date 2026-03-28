@@ -1,6 +1,6 @@
 // Core type definitions for Seraphim
 
-export type EmergencyType = 'fall' | 'fire' | 'flood' | 'car_crash' | 'medical' | 'violence' | 'unknown' | 'none';
+export type EmergencyType = 'fall' | 'fire' | 'flood' | 'earthquake' | 'car_crash' | 'medical' | 'violence' | 'unknown' | 'none';
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'none';
 export type AppMode = 'victim' | 'helper';
 
