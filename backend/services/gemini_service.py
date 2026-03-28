@@ -190,6 +190,7 @@ Provide 5-8 clear, actionable first aid steps that a non-medical person can foll
 Each step should be one concise sentence.
 Prioritize life-saving actions first, then comfort/stabilization.
 Do NOT suggest actions requiring medical equipment unless commonly available (e.g., AED).
+Do NOT include "call emergency services" or "call 911/112" — that is already handled automatically.
 
 Respond ONLY with a valid JSON array of strings (no markdown, no backticks):
 ["Step 1 text", "Step 2 text", "Step 3 text", ...]"""
