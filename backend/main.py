@@ -1,11 +1,16 @@
 import os
 import asyncio
+import logging
+import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("seraphim")
 
 load_dotenv()
 
@@ -89,7 +94,8 @@ async def handle_emergency(report: EmergencyReportRequest):
     try:
         report_text = report_processor.format_report(report.model_dump())
         audio_path = await tts_service.generate_audio(report_text)
-        operator_id = int(os.getenv("OPERATOR_TELEGRAM_ID", "0"))
+        operator_id_raw = os.getenv("OPERATOR_TELEGRAM_ID", "0")
+        operator_id = int(operator_id_raw) if operator_id_raw.isdigit() else operator_id_raw
         call_id = await telegram_caller.make_call(operator_id, audio_path)
 
         return CallStatus(
@@ -98,6 +104,7 @@ async def handle_emergency(report: EmergencyReportRequest):
             message=f"Emergency call initiated to operator",
         )
     except Exception as e:
+        logger.error(f"Emergency handler failed: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to handle emergency: {str(e)}")
 
 
@@ -123,12 +130,11 @@ async def test_call():
 
     try:
         test_text = (
-            "This is a test call from Seraphim Emergency Assistant. "
-            "If you receive this call, the system is working correctly. "
-            "No emergency is occurring."
+            "U are gay, i dont like u. "
         )
         audio_path = await tts_service.generate_audio(test_text)
-        operator_id = int(os.getenv("OPERATOR_TELEGRAM_ID", "0"))
+        operator_id_raw = os.getenv("OPERATOR_TELEGRAM_ID", "0")
+        operator_id = int(operator_id_raw) if operator_id_raw.isdigit() else operator_id_raw
         call_id = await telegram_caller.make_call(operator_id, audio_path)
 
         return CallStatus(
@@ -137,6 +143,7 @@ async def test_call():
             message="Test call initiated",
         )
     except Exception as e:
+        logger.error(f"Test call failed: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to make test call: {str(e)}")
 
 
@@ -146,5 +153,5 @@ if __name__ == "__main__":
         "main:app",
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
-        reload=True,
+        reload=False,
     )

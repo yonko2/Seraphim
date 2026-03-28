@@ -49,8 +49,8 @@ export default function CameraViewComponent({
       if (photo?.base64 && onCapture) {
         onCapture(photo.base64);
       }
-    } catch {
-      // silently handle camera errors
+    } catch (err) {
+      console.warn('[CameraView] Capture failed:', err);
     }
   };
 

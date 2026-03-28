@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -54,25 +55,30 @@ const VictimDashboard: React.FC = () => {
     }
   }, [activeEmergency, navigation]);
 
+  const analyzingRef = useRef(false);
+
   const handleCapture = useCallback(async (base64: string) => {
     const detector = detectorRef.current;
-    if (!detector || isAnalyzing) return;
+    if (!detector || analyzingRef.current) return;
 
+    analyzingRef.current = true;
     setIsAnalyzing(true);
     try {
       const result = await detector.analyzeFrame(base64);
       setClassification(result);
     } catch (error) {
       console.warn('[VictimDashboard] Frame analysis failed:', error);
+      Alert.alert('Analysis Failed', String(error));
     } finally {
+      analyzingRef.current = false;
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing]);
+  }, []);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} removeClippedSubviews={false}>
         {/* Status Bar */}
         <View style={styles.statusBar}>
           <View style={styles.statusLeft}>

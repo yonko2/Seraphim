@@ -42,7 +42,7 @@ export class BackendClient {
         return text as unknown as T;
       }
     } catch (error: unknown) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`[BackendClient] ${method} ${path} timed out after ${DEFAULT_TIMEOUT}ms`);
       }
       if (error instanceof Error && error.message.startsWith('[BackendClient]')) {

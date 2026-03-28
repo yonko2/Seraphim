@@ -1,13 +1,19 @@
 import asyncio
+import os
 import uuid
+import logging
 from telethon import TelegramClient
 from telethon.tl.functions.phone import RequestCallRequest, DiscardCallRequest
-from telethon.tl.types import PhoneCallProtocol
-from typing import Optional
+from telethon.tl.types import (
+    PhoneCallProtocol,
+    PhoneCallDiscardReasonHangup,
+)
+
+logger = logging.getLogger("seraphim")
 
 
 class TelegramCaller:
-    """Handles Telegram voice calls using Telethon + pytgcalls."""
+    """Handles Telegram voice calls using Telethon."""
 
     def __init__(self, api_id: int, api_hash: str, phone: str):
         self.api_id = api_id
@@ -27,21 +33,62 @@ class TelegramCaller:
         await self.client.disconnect()
         self.is_connected = False
 
-    async def make_call(self, user_id: int, audio_path: str) -> str:
+    async def _ring_user(self, entity):
         """
-        Initiate a Telegram voice call and play audio.
-        
-        Note: Full voice call implementation requires pytgcalls for audio streaming.
-        This is the signaling layer; pytgcalls handles the actual VoIP connection.
+        Initiate a Telegram call to make the user's phone ring.
+        We ring for a few seconds then hang up, since we can't stream audio.
+        """
+        try:
+            # Generate random bytes for g_a_hash (DH key exchange placeholder)
+            g_a_hash = os.urandom(32)
+
+            result = await self.client(RequestCallRequest(
+                user_id=entity,
+                random_id=int.from_bytes(os.urandom(4), 'big') % (2**31 - 1),
+                g_a_hash=g_a_hash,
+                protocol=PhoneCallProtocol(
+                    min_layer=92,
+                    max_layer=92,
+                    udp_p2p=True,
+                    udp_reflector=True,
+                    library_versions=["location hidden"],
+                ),
+            ))
+
+            phone_call = result.phone_call
+            logger.info(f"Call initiated, ringing user... call_id={phone_call.id}")
+
+            # Let it ring for 8 seconds
+            await asyncio.sleep(8)
+
+            # Hang up
+            try:
+                await self.client(DiscardCallRequest(
+                    peer=phone_call,
+                    duration=0,
+                    reason=PhoneCallDiscardReasonHangup(),
+                    connection_id=0,
+                ))
+                logger.info("Call disconnected after ringing")
+            except Exception as e:
+                logger.warning(f"Failed to discard call (may have been rejected): {e}")
+
+        except Exception as e:
+            logger.warning(f"Failed to initiate call (falling back to voice message): {e}")
+
+    async def make_call(self, user_id, audio_path: str) -> str:
+        """
+        Alert the operator: ring their phone, then send voice message + text.
         """
         call_id = str(uuid.uuid4())
 
         try:
-            # For the hackathon demo, we'll send a voice message as the primary method
-            # and attempt a real call as a stretch goal
-            
-            # Send voice message with the emergency report
             entity = await self.client.get_entity(user_id)
+
+            # Ring the user's phone (runs in background, don't block)
+            asyncio.create_task(self._ring_user(entity))
+
+            # Send voice message with the emergency report
             await self.client.send_file(
                 entity,
                 audio_path,
@@ -49,7 +96,7 @@ class TelegramCaller:
                 attributes=[]
             )
 
-            # Also send a text alert
+            # Send text alert
             await self.client.send_message(
                 entity,
                 "🚨 **SERAPHIM EMERGENCY ALERT** 🚨\n\n"
@@ -60,14 +107,15 @@ class TelegramCaller:
 
             self.active_calls[call_id] = {
                 "state": "completed",
-                "user_id": user_id,
+                "user_id": str(user_id),
                 "audio_path": audio_path,
-                "message": "Voice message and alert sent successfully",
+                "message": "Call initiated and voice message sent",
             }
 
             return call_id
 
         except Exception as e:
+            logger.error(f"make_call failed: {e}")
             self.active_calls[call_id] = {
                 "state": "failed",
                 "error": str(e),

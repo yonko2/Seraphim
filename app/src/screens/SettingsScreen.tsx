@@ -17,14 +17,12 @@ const SettingsScreen: React.FC = () => {
 
   const [backendUrl, setBackendUrl] = useState(store.backendUrl);
   const [operatorTelegramId, setOperatorTelegramId] = useState(store.operatorTelegramId);
-  const [geminiApiKey, setGeminiApiKey] = useState(store.geminiApiKey);
   const [sensitivity, setSensitivity] = useState(store.detectionSensitivity);
   const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
     setBackendUrl(store.backendUrl);
     setOperatorTelegramId(store.operatorTelegramId);
-    setGeminiApiKey(store.geminiApiKey);
     setSensitivity(store.detectionSensitivity);
   }, [store.backendUrl, store.operatorTelegramId, store.geminiApiKey, store.detectionSensitivity]);
 
@@ -32,7 +30,6 @@ const SettingsScreen: React.FC = () => {
     store.updateSettings({
       backendUrl: backendUrl.trim() || 'http://localhost:8000',
       operatorTelegramId: operatorTelegramId.trim(),
-      geminiApiKey: geminiApiKey.trim(),
       detectionSensitivity: sensitivity,
     });
     Alert.alert('Settings Saved', 'Your settings have been updated.');
@@ -89,22 +86,6 @@ const SettingsScreen: React.FC = () => {
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="numeric"
-          />
-        </View>
-
-        {/* API Section */}
-        <Text style={styles.sectionHeader}>API CONFIGURATION</Text>
-        <View style={styles.card}>
-          <Text style={styles.label}>Gemini API Key</Text>
-          <TextInput
-            style={styles.input}
-            value={geminiApiKey}
-            onChangeText={setGeminiApiKey}
-            placeholder="Enter your Gemini API key"
-            placeholderTextColor="#555"
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry
           />
         </View>
 
