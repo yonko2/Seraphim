@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -145,7 +145,7 @@ const EmergencyScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   content: {
     paddingTop: 60,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   statusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginHorizontal: 16,
     marginTop: 20,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',

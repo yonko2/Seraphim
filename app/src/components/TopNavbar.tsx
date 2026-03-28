@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, Image, StyleSheet, SafeAreaView } from 'react-native';
 
 interface TopNavbarProps {
@@ -25,16 +25,16 @@ export default function TopNavbar({ currentPage }: TopNavbarProps) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#1A2538',
   },
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: '#182336',
   },
   left: {
     flexDirection: 'row',
@@ -42,9 +42,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 14,
   },
   brand: {
     color: '#F8FAFC',
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   pageBadge: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,

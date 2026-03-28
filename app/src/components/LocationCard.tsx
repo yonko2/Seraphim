@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface LocationCardProps {
@@ -44,7 +44,7 @@ export default function LocationCard({ location }: LocationCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   coordBadge: {
     flex: 1,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,

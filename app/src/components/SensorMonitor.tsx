@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View,
   Text,
@@ -152,7 +152,7 @@ function AxisValue({ label, value, unit }: { label: string; value: number; unit?
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   magnitudeBarBg: {
     flex: 1,
     height: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 3,
     overflow: 'hidden',
   },

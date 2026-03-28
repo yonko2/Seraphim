@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+﻿import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -134,7 +134,7 @@ const HelperDashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
       <TopNavbar currentPage="Helper" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.screenTitle}>🤝 Helper Mode</Text>
@@ -198,7 +198,7 @@ const HelperDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   content: {
     paddingTop: 12,

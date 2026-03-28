@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppState, SensorReading, HealthData, DisasterClassification, EmergencyReport, AppMode } from '../types';
+import { AppState, SensorReading, HealthData, DisasterClassification, EmergencyReport, AppMode, UserProfile } from '../types';
 
 export const useStore = create<AppState>((set) => ({
   mode: 'victim',
@@ -14,6 +14,16 @@ export const useStore = create<AppState>((set) => ({
   garminConnected: false,
   garminDisplayName: null,
   collapseMonitoring: false,
+  userProfile: {
+    name: '',
+    age: '',
+    bloodType: '',
+    conditions: [],
+    allergies: [],
+    medications: [],
+    emergencyContact: '',
+    notes: '',
+  },
   setMode: (mode: AppMode) => set({ mode }),
   setMonitoring: (isMonitoring: boolean) => set({ isMonitoring }),
   setSensorData: (currentSensorData: SensorReading) => set({ currentSensorData }),
@@ -23,5 +33,7 @@ export const useStore = create<AppState>((set) => ({
   setGarminConnected: (connected: boolean, displayName?: string | null) =>
     set({ garminConnected: connected, garminDisplayName: displayName ?? null }),
   setCollapseMonitoring: (collapseMonitoring: boolean) => set({ collapseMonitoring }),
+  setUserProfile: (partial: Partial<UserProfile>) =>
+    set((state) => ({ userProfile: { ...state.userProfile, ...partial } })),
   updateSettings: (settings) => set((state) => ({ ...state, ...settings })),
 }));

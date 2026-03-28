@@ -46,6 +46,17 @@ from services.garmin_service import get_garmin_service
 from services.collapse_detector import get_collapse_detector
 
 
+class VictimProfile(BaseModel):
+    name: Optional[str] = None
+    age: Optional[str] = None
+    blood_type: Optional[str] = None
+    conditions: Optional[list[str]] = None
+    allergies: Optional[list[str]] = None
+    medications: Optional[list[str]] = None
+    emergency_contact: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class EmergencyReportRequest(BaseModel):
     timestamp: float
     emergency_type: str
@@ -53,6 +64,7 @@ class EmergencyReportRequest(BaseModel):
     location: Optional[dict] = None
     sensor_data: Optional[list] = None
     health_data: Optional[dict] = None
+    victim_profile: Optional[VictimProfile] = None
     objective_description: str
     recommended_actions: list[str] = []
     raw_observations: list[str] = []

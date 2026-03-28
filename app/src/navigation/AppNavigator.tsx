@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import EmergencyScreen from '../screens/EmergencyScreen';
@@ -13,7 +13,7 @@ const AppNavigator: React.FC = () => {
       initialRouteName="Home"
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0F172A' },
+        contentStyle: { backgroundColor: '#D5DDE8' },
       }}
     >
       <Stack.Screen name="Home" component={HomeScreen} />

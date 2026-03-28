@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { DisasterClassification } from '../types';
 
@@ -57,7 +57,7 @@ export default function ActivityLog({ entries }: ActivityLogProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    borderBottomColor: '#182336',
   },
   icon: {
     fontSize: 18,

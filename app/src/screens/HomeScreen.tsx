@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+﻿import React from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useStore } from '../store/useStore';
@@ -7,6 +7,8 @@ import type { RootStackParamList } from '../navigation/types';
 import type { AppMode } from '../types';
 
 type HomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+const logo = require('../../assets/logo.png');
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNavigationProp>();
@@ -19,8 +21,9 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
       <View style={styles.header}>
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
         <Text style={styles.title}>SERAPHIM</Text>
         <Text style={styles.subtitle}>Emergency Assistant</Text>
       </View>
@@ -36,17 +39,6 @@ const HomeScreen: React.FC = () => {
             Activate emergency monitoring and get immediate assistance
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.card, styles.helperCard]}
-          onPress={() => handleModeSelect('helper')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.cardEmoji}>🤝</Text>
-          <Text style={styles.cardTitle}>I can help</Text>
-          <Text style={styles.cardDescription}>
-            Respond to nearby emergencies and provide assistance
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -55,13 +47,19 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   header: {
     alignItems: 'center',
     marginBottom: 48,
+  },
+  logo: {
+    width: 280,
+    height: 280,
+    borderRadius: 56,
+    marginBottom: 28,
   },
   title: {
     fontSize: 42,
@@ -87,11 +85,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a0a0a',
     borderWidth: 1,
     borderColor: '#FF5A4F',
-  },
-  helperCard: {
-    backgroundColor: '#0a0a1a',
-    borderWidth: 1,
-    borderColor: '#38BDF8',
   },
   cardEmoji: {
     fontSize: 48,

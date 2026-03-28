@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,8 +16,81 @@ import { useCollapseMonitor } from '../hooks/useCollapseMonitor';
 const COUNTDOWN_SECONDS = 10;
 type CallState = 'idle' | 'countdown' | 'calling' | 'sent' | 'cancelled' | 'failed';
 
-// Simulate realistic health data with small fluctuations
-function useSimulatedHealth(isActive: boolean) {
+// ─── Health data model ───────────────────────────────────────────────
+interface HealthData {
+  hr: number;
+  spo2: number;
+  stress: number;
+  bodyBattery: number;
+  hrv: number;
+  restingHr: number;
+  temp: number;
+  glucose: number;
+  respRate: number;
+}
+
+// ─── Emergency simulation definitions ────────────────────────────────
+interface EmergencySimulation {
+  id: string;
+  label: string;
+  icon: string;
+  emergencyType: string;
+  severity: string;
+  criticalValues: Partial<HealthData>;
+  description: string;
+  actions: string[];
+  threshold: string;
+}
+
+const EMERGENCY_SIMULATIONS: EmergencySimulation[] = [
+  {
+    id: 'ischemic_heart',
+    label: 'Ischemic Heart Disease',
+    icon: '🫀',
+    emergencyType: 'medical',
+    severity: 'critical',
+    criticalValues: { hr: 142, hrv: 11, restingHr: 112, stress: 94 },
+    description: 'ST-segment elevation detected. Persistent tachycardia (HR 142bpm at rest) with critically low HRV (11ms).',
+    actions: ['Call 911 immediately', 'Administer aspirin if available', 'Keep patient calm and seated', 'Prepare for CPR if needed'],
+    threshold: 'HR >100bpm at rest + HRV critically low',
+  },
+  {
+    id: 'copd_resp_failure',
+    label: 'COPD / Resp. Failure',
+    icon: '🫁',
+    emergencyType: 'medical',
+    severity: 'critical',
+    criticalValues: { spo2: 82, respRate: 32, hr: 118, stress: 78 },
+    description: 'Critical oxygen desaturation (SpO2 82%). Respiration rate 32 breaths/min with detected acoustic wheeze pattern.',
+    actions: ['Call 911 immediately', 'Sit patient upright', 'Administer supplemental oxygen if available', 'Use rescue inhaler if prescribed'],
+    threshold: 'SpO2 <88% + Respiration Rate >25/min',
+  },
+  {
+    id: 'fall_serious',
+    label: 'Serious Fall',
+    icon: '🦴',
+    emergencyType: 'fall',
+    severity: 'critical',
+    criticalValues: { hr: 125, stress: 82, spo2: 93 },
+    description: 'High-impact fall detected (>3.5G force followed by stasis). Body orientation changed >45° with no subsequent movement.',
+    actions: ['Do not move the victim — spinal injury possible', 'Call 911 immediately', 'Check consciousness and breathing', 'Apply pressure to visible bleeding'],
+    threshold: 'Impact >3.5G + 0G stasis + tilt >45°',
+  },
+  {
+    id: 'heat_stroke',
+    label: 'Heat Stroke',
+    icon: '🌡️',
+    emergencyType: 'medical',
+    severity: 'critical',
+    criticalValues: { temp: 41.2, hr: 168, stress: 96, spo2: 91, bodyBattery: 8 },
+    description: 'Estimated core temperature 41.2°C (106°F). Galvanic skin response drop-off indicates sweat failure. HR 168bpm.',
+    actions: ['Call 911 — life-threatening emergency', 'Move to cool/shaded area immediately', 'Apply ice packs to neck, armpits, groin', 'Do NOT give fluids if unconscious'],
+    threshold: 'Core temp >40°C + sweat failure + HR >160bpm',
+  },
+];
+
+// ─── Simulated health hook with override support ─────────────────────
+function useSimulatedHealth(isActive: boolean, overrides: Partial<HealthData> | null) {
   const baseRef = useRef({
     hr: 68 + Math.floor(Math.random() * 10),
     spo2: 97 + Math.floor(Math.random() * 2),
@@ -25,9 +98,15 @@ function useSimulatedHealth(isActive: boolean) {
     bodyBattery: 65 + Math.floor(Math.random() * 15),
     hrv: 42 + Math.floor(Math.random() * 15),
     restingHr: 58 + Math.floor(Math.random() * 8),
+    temp: 36.4 + Math.random() * 0.6,
+    glucose: 85 + Math.floor(Math.random() * 20),
+    respRate: 14 + Math.floor(Math.random() * 4),
   });
 
-  const [data, setData] = useState(baseRef.current);
+  const [data, setData] = useState<HealthData>({
+    ...baseRef.current,
+    temp: parseFloat(baseRef.current.temp.toFixed(1)),
+  });
 
   useEffect(() => {
     if (!isActive) return;
@@ -38,34 +117,65 @@ function useSimulatedHealth(isActive: boolean) {
     };
 
     const interval = setInterval(() => {
-      const b = baseRef.current;
-      setData({
-        hr: jitter(b.hr, 6, 55, 100),
-        spo2: jitter(b.spo2, 2, 94, 100),
-        stress: jitter(b.stress, 8, 10, 60),
-        bodyBattery: jitter(b.bodyBattery, 4, 30, 100),
-        hrv: jitter(b.hrv, 6, 25, 80),
-        restingHr: jitter(b.restingHr, 2, 50, 70),
-      });
+      if (overrides) {
+        // When simulating, show critical values with small jitter
+        setData((prev) => ({
+          hr: jitter(overrides.hr ?? prev.hr, 3, 0, 250),
+          spo2: jitter(overrides.spo2 ?? prev.spo2, 1, 0, 100),
+          stress: jitter(overrides.stress ?? prev.stress, 2, 0, 100),
+          bodyBattery: jitter(overrides.bodyBattery ?? prev.bodyBattery, 1, 0, 100),
+          hrv: jitter(overrides.hrv ?? prev.hrv, 2, 0, 100),
+          restingHr: jitter(overrides.restingHr ?? prev.restingHr, 2, 0, 200),
+          temp: parseFloat((overrides.temp ?? prev.temp + (Math.random() - 0.5) * 0.1).toFixed(1)),
+          glucose: jitter(overrides.glucose ?? prev.glucose, 2, 0, 400),
+          respRate: jitter(overrides.respRate ?? prev.respRate, 1, 8, 40),
+        }));
+      } else {
+        const b = baseRef.current;
+        setData({
+          hr: jitter(b.hr, 6, 55, 100),
+          spo2: jitter(b.spo2, 2, 94, 100),
+          stress: jitter(b.stress, 8, 10, 60),
+          bodyBattery: jitter(b.bodyBattery, 4, 30, 100),
+          hrv: jitter(b.hrv, 6, 25, 80),
+          restingHr: jitter(b.restingHr, 2, 50, 70),
+          temp: parseFloat((36.4 + Math.random() * 0.6).toFixed(1)),
+          glucose: jitter(b.glucose, 5, 75, 115),
+          respRate: jitter(b.respRate, 2, 12, 20),
+        });
+      }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isActive, overrides]);
+
+  // Immediately apply overrides when they change
+  useEffect(() => {
+    if (overrides) {
+      setData((prev) => ({ ...prev, ...overrides }));
+    }
+  }, [overrides]);
 
   return data;
 }
 
+// ─── Main component ──────────────────────────────────────────────────
 export default function WatchScreen() {
   const collapseMonitoring = useStore((s) => s.collapseMonitoring);
   const setCollapseMonitoring = useStore((s) => s.setCollapseMonitoring);
   const backendUrl = useStore((s) => s.backendUrl);
+  const userProfile = useStore((s) => s.userProfile);
 
   const {
     isRunning, lastResult, collapseDetected, clearCollapse,
     liveAccel, liveGyro,
   } = useCollapseMonitor();
 
-  const health = useSimulatedHealth(true);
+  // Active simulation state
+  const [activeSimulation, setActiveSimulation] = useState<EmergencySimulation | null>(null);
+  const activeSimRef = useRef<EmergencySimulation | null>(null);
+  const healthOverrides = activeSimulation?.criticalValues ?? null;
+  const health = useSimulatedHealth(true, healthOverrides);
 
   // Countdown & emergency call state
   const [callState, setCallState] = useState<CallState>('idle');
@@ -103,7 +213,7 @@ export default function WatchScreen() {
 
   // Trigger countdown when collapse is detected
   useEffect(() => {
-    if (collapseDetected && callState === 'idle') {
+    if (collapseDetected && callState === 'idle' && !activeSimulation) {
       startCountdown();
     }
   }, [collapseDetected]);
@@ -114,6 +224,20 @@ export default function WatchScreen() {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
   }, []);
+
+  const triggerSimulation = useCallback((sim: EmergencySimulation) => {
+    if (callState === 'countdown' || callState === 'calling') return;
+    // Reset any lingering cancelled/failed/sent state
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    setCallState('idle');
+    setCallMessage('');
+    setActiveSimulation(sim);
+    activeSimRef.current = sim;
+    setTimeout(() => startCountdown(), 500);
+  }, [callState]);
 
   const startCountdown = () => {
     setCallState('countdown');
@@ -144,13 +268,11 @@ export default function WatchScreen() {
       countdownRef.current = null;
     }
     progressAnim.stopAnimation();
-    setCallState('cancelled');
-    setCallMessage('Emergency call cancelled');
+    setCallState('idle');
+    setCallMessage('');
+    setActiveSimulation(null);
+    activeSimRef.current = null;
     clearCollapse();
-    setTimeout(() => {
-      setCallState('idle');
-      setCallMessage('');
-    }, 3000);
   };
 
   const sendEmergencyReport = useCallback(async () => {
@@ -160,37 +282,62 @@ export default function WatchScreen() {
     if (!backendUrl) {
       setCallState('failed');
       setCallMessage('No backend URL configured');
-      setTimeout(() => { setCallState('idle'); setCallMessage(''); }, 5000);
+      setTimeout(() => { setCallState('idle'); setCallMessage(''); setActiveSimulation(null); activeSimRef.current = null; }, 5000);
       return;
     }
 
     try {
-      const confidence = lastResult?.confidence ?? 0.8;
-      const reason = lastResult?.reason ?? 'Fall/collapse detected via motion sensors';
+      const sim = activeSimRef.current;
+      const emergencyType = sim?.emergencyType ?? 'fall';
+      const severity = sim?.severity ?? (
+        (lastResult?.confidence ?? 0.8) >= 0.8 ? 'critical' : 'high'
+      );
+      const description = sim?.description
+        ?? `Person collapse/fall detected by phone motion sensors. ${lastResult?.reason ?? ''}`;
+      const actions = sim?.actions ?? [
+        'Check if victim is conscious and breathing',
+        'Do not move victim if spinal injury suspected',
+        'Call local emergency services',
+        'Begin CPR if victim is not breathing',
+      ];
 
       const report = {
         timestamp: Date.now() / 1000,
-        emergency_type: 'fall',
-        severity: confidence >= 0.8 ? 'critical' : confidence >= 0.6 ? 'high' : 'medium',
+        emergency_type: emergencyType,
+        severity,
         location: userLocation,
         sensor_data: null,
         health_data: {
           heart_rate: { current: health.hr },
           spo2: { latest: health.spo2 },
           stress: health.stress,
+          temperature: health.temp,
+          glucose: health.glucose,
+          respiration_rate: health.respRate,
+          hrv: health.hrv,
         },
-        objective_description: `Person collapse/fall detected by phone motion sensors. ${reason}`,
-        recommended_actions: [
-          'Check if victim is conscious and breathing',
-          'Do not move victim if spinal injury suspected',
-          'Call local emergency services',
-          'Begin CPR if victim is not breathing',
-        ],
+        victim_profile: {
+          name: userProfile.name || undefined,
+          age: userProfile.age || undefined,
+          blood_type: userProfile.bloodType || undefined,
+          conditions: userProfile.conditions.length ? userProfile.conditions : undefined,
+          allergies: userProfile.allergies.length ? userProfile.allergies : undefined,
+          medications: userProfile.medications.length ? userProfile.medications : undefined,
+          emergency_contact: userProfile.emergencyContact || undefined,
+          notes: userProfile.notes || undefined,
+        },
+        objective_description: description,
+        recommended_actions: actions,
         raw_observations: [
-          `Collapse confidence: ${(confidence * 100).toFixed(0)}%`,
-          `Detection source: accelerometer + gyroscope`,
+          sim ? `Simulation: ${sim.label}` : 'Detection source: accelerometer + gyroscope',
+          sim ? `Threshold: ${sim.threshold}` : `Collapse confidence: ${((lastResult?.confidence ?? 0) * 100).toFixed(0)}%`,
           `Heart rate: ${health.hr} BPM`,
           `SpO2: ${health.spo2}%`,
+          `Temperature: ${health.temp}°C`,
+          `Glucose: ${health.glucose} mg/dL`,
+          `Respiration: ${health.respRate} breaths/min`,
+          ...(userProfile.conditions.length ? [`Known conditions: ${userProfile.conditions.join(', ')}`] : []),
+          ...(userProfile.allergies.length ? [`Allergies: ${userProfile.allergies.join(', ')}`] : []),
         ],
       };
 
@@ -211,6 +358,8 @@ export default function WatchScreen() {
       setTimeout(() => {
         setCallState('idle');
         setCallMessage('');
+        setActiveSimulation(null);
+        activeSimRef.current = null;
         clearCollapse();
       }, 5000);
     } catch (error) {
@@ -220,6 +369,8 @@ export default function WatchScreen() {
       setTimeout(() => {
         setCallState('idle');
         setCallMessage('');
+        setActiveSimulation(null);
+        activeSimRef.current = null;
       }, 5000);
     }
   }, [backendUrl, lastResult, userLocation, health, clearCollapse]);
@@ -231,28 +382,71 @@ export default function WatchScreen() {
     ? Math.sqrt(liveGyro.x ** 2 + liveGyro.y ** 2 + liveGyro.z ** 2).toFixed(2)
     : '—';
 
+  const isCritical = (key: keyof HealthData) => activeSimulation?.criticalValues[key] != null;
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
       <TopNavbar currentPage="Watch" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* Active Simulation Banner */}
+        {activeSimulation && callState !== 'idle' && (
+          <View style={styles.simBanner}>
+            <Text style={styles.simBannerIcon}>{activeSimulation.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.simBannerTitle}>{activeSimulation.label}</Text>
+              <Text style={styles.simBannerThreshold}>{activeSimulation.threshold}</Text>
+            </View>
+          </View>
+        )}
 
         {/* Simulated Health Data */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>❤️ Health Data</Text>
-            <View style={styles.simBadge}>
-              <Text style={styles.simBadgeText}>● SIMULATED</Text>
+            <View style={[styles.simBadge, activeSimulation && styles.simBadgeCritical]}>
+              <Text style={[styles.simBadgeText, activeSimulation && styles.simBadgeTextCritical]}>
+                {activeSimulation ? '⚠ CRITICAL' : '● SIMULATED'}
+              </Text>
             </View>
           </View>
 
           <View style={styles.healthGrid}>
-            <HealthTile icon="❤️" label="Heart Rate" value={health.hr} unit="BPM" color="#FF5A4F" />
-            <HealthTile icon="🫁" label="SpO2" value={health.spo2} unit="%" color="#38BDF8" />
-            <HealthTile icon="😰" label="Stress" value={health.stress} unit="" color="#F59E0B" />
-            <HealthTile icon="🔋" label="Body Battery" value={health.bodyBattery} unit="" color="#22C55E" />
-            <HealthTile icon="💓" label="HRV" value={health.hrv} unit="ms" color="#A78BFA" />
-            <HealthTile icon="❤️" label="Resting HR" value={health.restingHr} unit="BPM" color="#FB7185" />
+            <HealthTile icon="❤️" label="Heart Rate" value={health.hr} unit="BPM" color={isCritical('hr') ? '#FF5A4F' : '#FF5A4F'} critical={isCritical('hr')} />
+            <HealthTile icon="🫁" label="SpO2" value={health.spo2} unit="%" color={isCritical('spo2') ? '#FF5A4F' : '#38BDF8'} critical={isCritical('spo2')} />
+            <HealthTile icon="🌡️" label="Temp" value={health.temp} unit="°C" color={isCritical('temp') ? '#FF5A4F' : '#F59E0B'} critical={isCritical('temp')} />
+            <HealthTile icon="💨" label="Resp Rate" value={health.respRate} unit="/min" color={isCritical('respRate') ? '#FF5A4F' : '#38BDF8'} critical={isCritical('respRate')} />
+            <HealthTile icon="💓" label="HRV" value={health.hrv} unit="ms" color={isCritical('hrv') ? '#FF5A4F' : '#A78BFA'} critical={isCritical('hrv')} />
+            <HealthTile icon="😰" label="Stress" value={health.stress} unit="" color={isCritical('stress') ? '#FF5A4F' : '#F59E0B'} critical={isCritical('stress')} />
+            <HealthTile icon="🔋" label="Body Battery" value={health.bodyBattery} unit="" color={isCritical('bodyBattery') ? '#FF5A4F' : '#22C55E'} critical={isCritical('bodyBattery')} />
+          </View>
+        </View>
+
+        {/* Simulate Emergency Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>⚠️ Simulate Emergency</Text>
+          </View>
+          <Text style={styles.simDescription}>
+            Trigger a simulated medical emergency with critical vital signs. Each scenario overrides health data and initiates the emergency alert flow.
+          </Text>
+          <View style={styles.simGrid}>
+            {EMERGENCY_SIMULATIONS.map((sim) => (
+              <TouchableOpacity
+                key={sim.id}
+                style={[
+                  styles.simButton,
+                  activeSimulation?.id === sim.id && styles.simButtonActive,
+                ]}
+                onPress={() => triggerSimulation(sim)}
+                disabled={callState !== 'idle'}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.simButtonIcon}>{sim.icon}</Text>
+                <Text style={styles.simButtonLabel} numberOfLines={2}>{sim.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -307,7 +501,7 @@ export default function WatchScreen() {
           </View>
 
           <Text style={styles.monitorDescription}>
-            Uses phone accelerometer and gyroscope combined with simulated health vitals to detect falls and collapses in real-time.
+            Uses phone accelerometer and gyroscope combined with health vitals to detect falls and collapses in real-time.
           </Text>
 
           <TouchableOpacity
@@ -347,46 +541,52 @@ export default function WatchScreen() {
               <Text style={styles.clearCollapseBtnText}>Dismiss Collapse Alert</Text>
             </TouchableOpacity>
           )}
-
-          {/* Emergency Countdown */}
-          {callState === 'countdown' && (
-            <View style={styles.countdownPanel}>
-              <Text style={styles.countdownIcon}>🚨</Text>
-              <Text style={styles.countdownTitle}>Calling emergency in {countdown}s</Text>
-              <Text style={styles.countdownSubtitle}>
-                A Telegram call and message will be sent to the operator
-              </Text>
-              <View style={styles.progressBarBg}>
-                <Animated.View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: progressAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0%', '100%'],
-                      }),
-                    },
-                  ]}
-                />
-              </View>
-              <TouchableOpacity style={styles.cancelBtn} onPress={cancelCountdown} activeOpacity={0.7}>
-                <Text style={styles.cancelBtnText}>✕  Cancel Emergency Call</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Calling / Sent / Failed status */}
-          {(callState === 'calling' || callState === 'sent' || callState === 'failed' || callState === 'cancelled') && (
-            <View style={[
-              styles.callStatusPanel,
-              callState === 'sent' && styles.callStatusSent,
-              callState === 'failed' && styles.callStatusFailed,
-              callState === 'cancelled' && styles.callStatusCancelled,
-            ]}>
-              <Text style={styles.callStatusText}>{callMessage}</Text>
-            </View>
-          )}
         </View>
+
+        {/* Emergency Countdown — shared by collapse + simulation */}
+        {callState === 'countdown' && (
+          <View style={[styles.card, styles.countdownCard]}>
+            <Text style={styles.countdownIcon}>🚨</Text>
+            <Text style={styles.countdownTitle}>
+              {activeSimulation
+                ? `${activeSimulation.icon} ${activeSimulation.label}`
+                : 'Collapse Detected'}
+            </Text>
+            <Text style={styles.countdownTimer}>Calling emergency in {countdown}s</Text>
+            <Text style={styles.countdownSubtitle}>
+              A Telegram call and message will be sent to the operator
+            </Text>
+            <View style={styles.progressBarBg}>
+              <Animated.View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+            <TouchableOpacity style={styles.cancelBtn} onPress={cancelCountdown} activeOpacity={0.7}>
+              <Text style={styles.cancelBtnText}>✕  Cancel Emergency Call</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Calling / Sent / Failed status */}
+        {(callState === 'calling' || callState === 'sent' || callState === 'failed' || callState === 'cancelled') && (
+          <View style={[
+            styles.card,
+            styles.callStatusPanel,
+            callState === 'sent' && styles.callStatusSent,
+            callState === 'failed' && styles.callStatusFailed,
+            callState === 'cancelled' && styles.callStatusCancelled,
+          ]}>
+            <Text style={styles.callStatusText}>{callMessage}</Text>
+          </View>
+        )}
 
         <View style={{ height: 30 }} />
       </ScrollView>
@@ -394,17 +594,20 @@ export default function WatchScreen() {
   );
 }
 
-function HealthTile({ icon, label, value, unit, color }: {
-  icon: string; label: string; value: any; unit: string; color: string;
+// ─── Sub-components ──────────────────────────────────────────────────
+
+function HealthTile({ icon, label, value, unit, color, critical }: {
+  icon: string; label: string; value: any; unit: string; color: string; critical?: boolean;
 }) {
   return (
-    <View style={styles.healthTile}>
+    <View style={[styles.healthTile, critical && styles.healthTileCritical]}>
       <Text style={styles.tileIcon}>{icon}</Text>
       <Text style={styles.tileLabel}>{label}</Text>
       <Text style={[styles.tileValue, { color }]}>
         {value != null ? String(value) : 'N/A'}
       </Text>
       {value != null && unit ? <Text style={styles.tileUnit}>{unit}</Text> : null}
+      {critical && <Text style={styles.tileCriticalBadge}>CRITICAL</Text>}
     </View>
   );
 }
@@ -429,17 +632,19 @@ function ScoreBadge({ label, value }: { label: string; value: number }) {
   );
 }
 
+// ─── Styles ──────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   content: {
     paddingTop: 12,
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
@@ -456,11 +661,43 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
+
+  // Simulation banner
+  simBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DC262630',
+    borderWidth: 1,
+    borderColor: '#DC2626',
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 16,
+    marginTop: 10,
+    gap: 12,
+  },
+  simBannerIcon: {
+    fontSize: 28,
+  },
+  simBannerTitle: {
+    color: '#FF5A4F',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  simBannerThreshold: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+
+  // Sim badge
   simBadge: {
     backgroundColor: '#38BDF822',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+  },
+  simBadgeCritical: {
+    backgroundColor: '#FF5A4F22',
   },
   simBadgeText: {
     color: '#38BDF8',
@@ -468,6 +705,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  simBadgeTextCritical: {
+    color: '#FF5A4F',
+  },
+
+  // Status badges
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -491,18 +733,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+
+  // Health grid
   healthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   healthTile: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
     width: '48%',
     flexGrow: 1,
+  },
+  healthTileCritical: {
+    backgroundColor: '#FF5A4F15',
+    borderWidth: 1,
+    borderColor: '#FF5A4F55',
   },
   tileIcon: {
     fontSize: 20,
@@ -526,11 +775,64 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 2,
   },
+  tileCriticalBadge: {
+    color: '#FF5A4F',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginTop: 4,
+    backgroundColor: '#FF5A4F20',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+
+  // Simulate emergency
+  simDescription: {
+    color: '#94A3B8',
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+  simGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  simButton: {
+    backgroundColor: '#182336',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48%',
+    flexGrow: 1,
+    minHeight: 72,
+    borderWidth: 1,
+    borderColor: '#182336',
+  },
+  simButtonActive: {
+    borderColor: '#FF5A4F',
+    backgroundColor: '#FF5A4F15',
+  },
+  simButtonIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  simButtonLabel: {
+    color: '#F8FAFC',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+
+  // Sensor grid
   sensorGrid: {
     gap: 10,
   },
   sensorBlock: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 10,
     padding: 12,
   },
@@ -573,6 +875,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 16,
   },
+
+  // Collapse monitoring
   monitorDescription: {
     color: '#94A3B8',
     fontSize: 13,
@@ -634,7 +938,7 @@ const styles = StyleSheet.create({
   },
   scoreBadge: {
     flex: 1,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 8,
     paddingVertical: 6,
     alignItems: 'center',
@@ -662,13 +966,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-  countdownPanel: {
-    marginTop: 14,
-    backgroundColor: '#DC262620',
+
+  // Countdown
+  countdownCard: {
     borderWidth: 1,
     borderColor: '#DC2626',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#DC262615',
     alignItems: 'center',
   },
   countdownIcon: {
@@ -676,8 +979,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   countdownTitle: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  countdownTimer: {
     color: '#FF5A4F',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     marginBottom: 4,
   },
@@ -690,7 +999,7 @@ const styles = StyleSheet.create({
   progressBarBg: {
     width: '100%',
     height: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 14,
@@ -701,7 +1010,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   cancelBtn: {
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -713,12 +1022,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
+
+  // Call status
   callStatusPanel: {
-    marginTop: 14,
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
-    backgroundColor: '#38BDF822',
     borderWidth: 1,
     borderColor: '#38BDF8',
   },

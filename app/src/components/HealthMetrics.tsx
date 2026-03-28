@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   View,
   Text,
@@ -160,7 +160,7 @@ export default function HealthMetrics() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     padding: 12,
     marginVertical: 4,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',

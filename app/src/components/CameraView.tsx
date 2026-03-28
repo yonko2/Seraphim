@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+﻿import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -269,7 +269,7 @@ export default function CameraViewComponent({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     aspectRatio: 16 / 9,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   camera: {
     flex: 1,
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     color: '#F8FAFCcc',
     fontSize: 12,
     marginTop: 4,
-    textShadowColor: '#0F172A',
+    textShadowColor: '#D5DDE8',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   },
   recordBtn: {
     flex: 1,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   progressBarBg: {
     marginTop: 8,
     height: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 3,
     overflow: 'hidden',
   },

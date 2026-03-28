@@ -188,6 +188,7 @@ class TelegramCaller:
         severity = report_data.get("severity", "unknown").upper()
         description = report_data.get("objective_description", "")
         location = report_data.get("location")
+        victim = report_data.get("victim_profile") or {}
 
         icon_map = {
             "FIRE": "🔥", "FLOOD": "🌊", "EARTHQUAKE": "🏚️", "FALL": "🤕",
@@ -198,6 +199,26 @@ class TelegramCaller:
         lines = [
             f"🚨 **{etype}** — {severity}",
         ]
+
+        # Victim info
+        victim_parts = []
+        if victim.get("name"):
+            victim_parts.append(victim["name"])
+        if victim.get("age"):
+            victim_parts.append(f"age {victim['age']}")
+        if victim.get("blood_type"):
+            victim_parts.append(f"blood type {victim['blood_type']}")
+        if victim_parts:
+            lines.append(f"👤 {', '.join(victim_parts)}")
+
+        if victim.get("conditions"):
+            lines.append(f"🏥 Conditions: {', '.join(victim['conditions'])}")
+
+        if victim.get("allergies"):
+            lines.append(f"⚠️ Allergies: {', '.join(victim['allergies'])}")
+
+        if victim.get("medications"):
+            lines.append(f"💊 Medications: {', '.join(victim['medications'])}")
 
         if location:
             address = location.get("address")
@@ -211,6 +232,9 @@ class TelegramCaller:
 
         if description:
             lines.append(f"{icon} {description}")
+
+        if victim.get("emergency_contact"):
+            lines.append(f"📞 Emergency contact: {victim['emergency_contact']}")
 
         return "\n".join(lines)
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,7 @@ const VictimDashboard: React.FC = () => {
   } = useEmergencyDetection();
 
   const backendUrl = useStore((s) => s.backendUrl);
+  const userProfile = useStore((s) => s.userProfile);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [classification, setClassification] = useState<DisasterClassification | null>(null);
@@ -203,11 +204,23 @@ const VictimDashboard: React.FC = () => {
         location: userLocation,
         sensor_data: null,
         health_data: null,
+        victim_profile: {
+          name: userProfile.name || undefined,
+          age: userProfile.age || undefined,
+          blood_type: userProfile.bloodType || undefined,
+          conditions: userProfile.conditions.length ? userProfile.conditions : undefined,
+          allergies: userProfile.allergies.length ? userProfile.allergies : undefined,
+          medications: userProfile.medications.length ? userProfile.medications : undefined,
+          emergency_contact: userProfile.emergencyContact || undefined,
+          notes: userProfile.notes || undefined,
+        },
         objective_description: classification.description || 'Emergency detected by AI vision',
         recommended_actions: classification.instructions || [],
         raw_observations: [
           `AI Confidence: ${(classification.confidence * 100).toFixed(0)}%`,
           `Detection type: ${classification.type}`,
+          ...(userProfile.conditions.length ? [`Known conditions: ${userProfile.conditions.join(', ')}`] : []),
+          ...(userProfile.allergies.length ? [`Allergies: ${userProfile.allergies.join(', ')}`] : []),
         ],
       };
 
@@ -305,7 +318,7 @@ const VictimDashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
       <TopNavbar currentPage="Dashboard" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} removeClippedSubviews={false}>
         {/* Camera Feed */}
@@ -473,7 +486,7 @@ const VictimDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   content: {
     paddingTop: 12,
@@ -484,7 +497,7 @@ const styles = StyleSheet.create({
   capturedImagePanel: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 12,
     padding: 12,
   },
@@ -498,7 +511,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 16 / 9,
     borderRadius: 10,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   resultPanel: {
     marginHorizontal: 16,
@@ -617,7 +630,7 @@ const styles = StyleSheet.create({
   countdownBarBg: {
     width: '100%',
     height: 8,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 14,
@@ -679,7 +692,7 @@ const styles = StyleSheet.create({
   cancelledPanel: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderWidth: 2,
     borderColor: '#94A3B8',
     borderRadius: 16,

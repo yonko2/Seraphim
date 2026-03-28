@@ -56,6 +56,17 @@ export interface HealthProvider {
   stopMonitoring(): Promise<void>;
 }
 
+export interface UserProfile {
+  name: string;
+  age: string;
+  bloodType: string;
+  conditions: string[];
+  allergies: string[];
+  medications: string[];
+  emergencyContact: string;
+  notes: string;
+}
+
 export interface AppState {
   mode: AppMode;
   isMonitoring: boolean;
@@ -69,6 +80,7 @@ export interface AppState {
   garminConnected: boolean;
   garminDisplayName: string | null;
   collapseMonitoring: boolean;
+  userProfile: UserProfile;
   setMode: (mode: AppMode) => void;
   setMonitoring: (monitoring: boolean) => void;
   setSensorData: (data: SensorReading) => void;
@@ -77,5 +89,6 @@ export interface AppState {
   setActiveEmergency: (report: EmergencyReport | null) => void;
   setGarminConnected: (connected: boolean, displayName?: string | null) => void;
   setCollapseMonitoring: (enabled: boolean) => void;
+  setUserProfile: (profile: Partial<UserProfile>) => void;
   updateSettings: (settings: Partial<Pick<AppState, 'backendUrl' | 'operatorTelegramId' | 'detectionSensitivity'>>) => void;
 }

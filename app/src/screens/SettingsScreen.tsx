@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -153,7 +153,7 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
   },
   content: {
     padding: 20,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#111827',
+    backgroundColor: '#0E1726',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -187,14 +187,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
     color: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#1E293B',
+    borderColor: '#182336',
     marginBottom: 16,
   },
   sensitivityHeader: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   sliderTrack: {
     height: 6,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#182336',
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 14,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#D5DDE8',
     alignItems: 'center',
   },
   sliderBtnActive: {

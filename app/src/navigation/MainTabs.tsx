@@ -1,10 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { useStore } from '../store/useStore';
 import VictimDashboard from '../screens/VictimDashboard';
 import HelperDashboard from '../screens/HelperDashboard';
 import WatchScreen from '../screens/WatchScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import type { MainTabParamList } from './types';
 
@@ -18,8 +19,8 @@ const MainTabs: React.FC = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#111827',
-          borderTopColor: '#1E293B',
+          backgroundColor: '#1A2538',
+          borderTopColor: '#182336',
         },
         tabBarActiveTintColor: '#FF5A4F',
         tabBarInactiveTintColor: '#94A3B8',
@@ -39,6 +40,14 @@ const MainTabs: React.FC = () => {
         options={{
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>⌚</Text>,
           tabBarLabel: 'Watch',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
+          tabBarLabel: 'Profile',
         }}
       />
       <Tab.Screen
