@@ -1,0 +1,250 @@
+import React, { useState, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+  StatusBar,
+} from 'react-native';
+import { useStore } from '../store/useStore';
+import { GeminiService } from '../services/ai/GeminiService';
+import { DisasterDetector } from '../services/ai/DisasterDetector';
+import CameraViewComponent from '../components/CameraView';
+import FirstAidGuide from '../components/FirstAidGuide';
+import type { DisasterClassification, EmergencyType } from '../types';
+
+const HelperDashboard: React.FC = () => {
+  const geminiApiKey = useStore((s) => s.geminiApiKey);
+  const backendUrl = useStore((s) => s.backendUrl);
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [classification, setClassification] = useState<DisasterClassification | null>(null);
+  const [firstAidSteps, setFirstAidSteps] = useState<string[]>([]);
+  const [isLoadingGuide, setIsLoadingGuide] = useState(false);
+  const [isAlerting, setIsAlerting] = useState(false);
+
+  const geminiRef = useRef<GeminiService | null>(null);
+  const detectorRef = useRef<DisasterDetector | null>(null);
+  const lastBase64Ref = useRef<string | null>(null);
+
+  // Lazily create services
+  const getGemini = useCallback((): GeminiService | null => {
+    if (!geminiApiKey) return null;
+    if (!geminiRef.current) {
+      geminiRef.current = new GeminiService(geminiApiKey);
+      detectorRef.current = new DisasterDetector(geminiRef.current);
+    }
+    return geminiRef.current;
+  }, [geminiApiKey]);
+
+  const handleCapture = useCallback(async (base64: string) => {
+    lastBase64Ref.current = base64;
+    const detector = detectorRef.current ?? (() => {
+      getGemini();
+      return detectorRef.current;
+    })();
+
+    if (!detector || isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    try {
+      const result = await detector.analyzeFrame(base64);
+      setClassification(result);
+    } catch (error) {
+      console.warn('[HelperDashboard] Analysis failed:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [isAnalyzing, getGemini]);
+
+  const handleAnalyzeScene = useCallback(async () => {
+    const gemini = getGemini();
+    if (!gemini) {
+      Alert.alert('API Key Required', 'Please set your Gemini API key in Settings.');
+      return;
+    }
+
+    if (!classification || classification.type === 'none') {
+      Alert.alert('No Scene Data', 'Please capture an image first using the camera.');
+      return;
+    }
+
+    setIsLoadingGuide(true);
+    setFirstAidSteps([]);
+    try {
+      const steps = await gemini.getFirstAidGuidance(
+        classification.type,
+        classification.description,
+      );
+      setFirstAidSteps(steps);
+    } catch (error) {
+      console.warn('[HelperDashboard] First aid guidance failed:', error);
+      setFirstAidSteps([
+        'Ensure the scene is safe before approaching.',
+        'Call emergency services immediately (112).',
+        'Provide basic first aid if trained.',
+        'Stay with the victim until help arrives.',
+      ]);
+    } finally {
+      setIsLoadingGuide(false);
+    }
+  }, [classification, getGemini]);
+
+  const handleAlertEmergency = useCallback(async () => {
+    setIsAlerting(true);
+    try {
+      const response = await fetch(`${backendUrl}/emergency`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'helper',
+          timestamp: Date.now(),
+          classification,
+          type: classification?.type ?? 'unknown',
+        }),
+      });
+      if (response.ok) {
+        Alert.alert('Alert Sent', 'Emergency services have been notified.');
+      } else {
+        Alert.alert('Alert Failed', 'Could not reach emergency services. Call 112 directly.');
+      }
+    } catch {
+      Alert.alert('Network Error', 'Could not connect to backend. Call 112 directly.');
+    } finally {
+      setIsAlerting(false);
+    }
+  }, [backendUrl, classification]);
+
+  const emergencyType: EmergencyType = classification?.type ?? 'unknown';
+  const hasClassification = classification != null && classification.type !== 'none';
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.screenTitle}>🤝 Helper Mode</Text>
+        <Text style={styles.subtitle}>Point camera at the scene to analyze</Text>
+
+        {/* Camera View - Full Width */}
+        <CameraViewComponent
+          onCapture={handleCapture}
+          isAnalyzing={isAnalyzing}
+          classification={classification}
+        />
+
+        {/* Analyze Button */}
+        <TouchableOpacity
+          style={[styles.analyzeButton, !hasClassification && styles.analyzeButtonDisabled]}
+          onPress={handleAnalyzeScene}
+          activeOpacity={0.7}
+          disabled={isLoadingGuide}
+        >
+          {isLoadingGuide ? (
+            <ActivityIndicator color="#007AFF" size="small" />
+          ) : (
+            <Text style={styles.analyzeButtonText}>
+              🔍 {hasClassification ? 'Get First Aid Guidance' : 'Capture Image First'}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* First Aid Guide */}
+        {(firstAidSteps.length > 0 || isLoadingGuide) && (
+          <FirstAidGuide
+            emergencyType={emergencyType}
+            steps={firstAidSteps}
+            isLoading={isLoadingGuide}
+          />
+        )}
+
+        {/* Alert Emergency Services */}
+        <TouchableOpacity
+          style={styles.alertButton}
+          onPress={handleAlertEmergency}
+          activeOpacity={0.7}
+          disabled={isAlerting}
+        >
+          {isAlerting ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Text style={styles.alertButtonIcon}>🚨</Text>
+              <Text style={styles.alertButtonText}>Alert Emergency Services</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+  },
+  content: {
+    paddingTop: 56,
+    paddingBottom: 20,
+  },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginLeft: 20,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888',
+    marginLeft: 20,
+    marginBottom: 12,
+  },
+  analyzeButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#007AFF22',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#007AFF44',
+  },
+  analyzeButtonDisabled: {
+    opacity: 0.5,
+  },
+  analyzeButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#007AFF',
+  },
+  alertButton: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#ff3b30',
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  alertButtonIcon: {
+    fontSize: 20,
+  },
+  alertButtonText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  bottomSpacer: {
+    height: 30,
+  },
+});
+
+export default HelperDashboard;

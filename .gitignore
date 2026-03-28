@@ -1,0 +1,20 @@
+# Node
+app/node_modules/
+app/.expo/
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/services/__pycache__/
+backend/audio/*.mp3
+backend/audio/*.ogg
+backend/audio/*.wav
+backend/.env
+backend/seraphim_session.*
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

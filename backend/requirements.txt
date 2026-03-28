@@ -1,0 +1,8 @@
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+telethon==1.34.0
+py-tgcalls==2.1.0
+gtts==2.5.1
+pydantic==2.6.1
+python-dotenv==1.0.1
+aiofiles==23.2.1
