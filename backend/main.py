@@ -42,6 +42,8 @@ from services.telegram_caller import TelegramCaller
 from services.tts_service import TTSService
 from services.report_processor import ReportProcessor
 from services.gemini_service import get_gemini_service
+from services.garmin_service import get_garmin_service
+from services.collapse_detector import get_collapse_detector
 
 
 class EmergencyReportRequest(BaseModel):
@@ -97,6 +99,17 @@ class PanicFilterRequest(BaseModel):
 
 class PanicFilterResponse(BaseModel):
     filtered_text: str
+
+
+class GarminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class GarminHealthCheckRequest(BaseModel):
+    accel_data: list[dict]  # [{x, y, z, timestamp}, ...]
+    gyro_data: Optional[list[dict]] = None  # [{x, y, z, timestamp}, ...]
+    ble_heart_rate: Optional[int] = None
 
 
 telegram_caller: Optional[TelegramCaller] = None
@@ -345,6 +358,94 @@ async def test_call():
     except Exception as e:
         logger.error(f"Test call failed: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Failed to make test call: {str(e)}")
+
+
+# ── Garmin Connect Endpoints ──────────────────────────────────────────────────
+
+@app.post("/garmin/login")
+async def garmin_login(request: GarminLoginRequest):
+    """Authenticate with Garmin Connect."""
+    garmin = get_garmin_service()
+    try:
+        result = garmin.login(request.email, request.password)
+        return {"status": "connected", **result}
+    except Exception as e:
+        logger.error(f"Garmin login failed: {e}")
+        raise HTTPException(status_code=401, detail=f"Garmin login failed: {str(e)}")
+
+
+@app.get("/garmin/status")
+async def garmin_status():
+    """Check Garmin Connect authentication status and device info."""
+    garmin = get_garmin_service()
+    if not garmin.is_authenticated:
+        return {"authenticated": False, "devices": []}
+    try:
+        devices = garmin.get_devices()
+        return {
+            "authenticated": True,
+            "display_name": garmin._client.display_name if garmin._client else None,
+            "devices": devices,
+        }
+    except Exception as e:
+        logger.warning(f"Garmin status check failed: {e}")
+        return {"authenticated": True, "devices": [], "warning": str(e)}
+
+
+@app.get("/garmin/health")
+async def garmin_health():
+    """Fetch latest health snapshot from Garmin Connect."""
+    garmin = get_garmin_service()
+    if not garmin.is_authenticated:
+        raise HTTPException(status_code=401, detail="Not authenticated with Garmin Connect")
+    try:
+        snapshot = garmin.get_health_snapshot()
+        return {"status": "ok", "data": snapshot}
+    except Exception as e:
+        logger.error(f"Garmin health fetch failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch health data: {str(e)}")
+
+
+@app.post("/garmin/health-check")
+async def garmin_health_check(request: GarminHealthCheckRequest):
+    """Assess collapse risk from phone accelerometer + Garmin health data."""
+    garmin = get_garmin_service()
+    detector = get_collapse_detector()
+
+    # Fetch Garmin health if authenticated
+    garmin_health = None
+    if garmin.is_authenticated:
+        try:
+            garmin_health = garmin.get_health_snapshot()
+        except Exception as e:
+            logger.warning(f"Garmin health fetch failed during health-check: {e}")
+
+    # Overlay real-time BLE heart rate if provided
+    if request.ble_heart_rate is not None:
+        if garmin_health is None:
+            garmin_health = {}
+        garmin_health["heart_rate"] = {
+            "current": request.ble_heart_rate,
+            "source": "ble",
+        }
+
+    assessment = detector.assess(request.accel_data, garmin_health, request.gyro_data)
+
+    return {
+        "collapsed": assessment.collapsed,
+        "confidence": assessment.confidence,
+        "reason": assessment.reason,
+        "health_data": assessment.health_data,
+        "details": assessment.details,
+    }
+
+
+@app.post("/garmin/logout")
+async def garmin_logout():
+    """Disconnect from Garmin Connect and clear stored tokens."""
+    garmin = get_garmin_service()
+    garmin.logout()
+    return {"status": "disconnected"}
 
 
 if __name__ == "__main__":

@@ -66,11 +66,16 @@ export interface AppState {
   backendUrl: string;
   operatorTelegramId: string;
   detectionSensitivity: number; // 0-1
+  garminConnected: boolean;
+  garminDisplayName: string | null;
+  collapseMonitoring: boolean;
   setMode: (mode: AppMode) => void;
   setMonitoring: (monitoring: boolean) => void;
   setSensorData: (data: SensorReading) => void;
   setHealthData: (data: HealthData) => void;
   setClassification: (classification: DisasterClassification) => void;
   setActiveEmergency: (report: EmergencyReport | null) => void;
+  setGarminConnected: (connected: boolean, displayName?: string | null) => void;
+  setCollapseMonitoring: (enabled: boolean) => void;
   updateSettings: (settings: Partial<Pick<AppState, 'backendUrl' | 'operatorTelegramId' | 'detectionSensitivity'>>) => void;
 }

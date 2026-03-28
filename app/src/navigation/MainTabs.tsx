@@ -4,6 +4,7 @@ import { Text } from 'react-native';
 import { useStore } from '../store/useStore';
 import VictimDashboard from '../screens/VictimDashboard';
 import HelperDashboard from '../screens/HelperDashboard';
+import WatchScreen from '../screens/WatchScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import type { MainTabParamList } from './types';
 
@@ -30,6 +31,14 @@ const MainTabs: React.FC = () => {
         options={{
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>🛡️</Text>,
           tabBarLabel: 'Dashboard',
+        }}
+      />
+      <Tab.Screen
+        name="Watch"
+        component={WatchScreen}
+        options={{
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>⌚</Text>,
+          tabBarLabel: 'Watch',
         }}
       />
       <Tab.Screen

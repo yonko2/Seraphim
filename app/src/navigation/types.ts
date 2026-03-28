@@ -10,6 +10,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
+  Watch: undefined;
   Settings: undefined;
 };
 
