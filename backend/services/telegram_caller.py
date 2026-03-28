@@ -143,53 +143,37 @@ class TelegramCaller:
             raise
 
     def _format_telegram_message(self, report_data: dict = None) -> str:
-        """Format Telegram message as an emergency dispatch report."""
+        """Compact emergency dispatch message for Telegram."""
         if not report_data:
-            return (
-                "🚨 **EMERGENCY DISPATCH** 🚨\n\n"
-                "An emergency has been detected and requires immediate response.\n"
-                "▶️ **Play the voice message above** for the full dispatch report."
-            )
+            return "🚨 **EMERGENCY** — Details in voice message above."
 
-        emergency_type = report_data.get("emergency_type", "unknown").replace("_", " ").upper()
+        etype = report_data.get("emergency_type", "unknown").replace("_", " ").upper()
         severity = report_data.get("severity", "unknown").upper()
         description = report_data.get("objective_description", "")
-        actions = report_data.get("recommended_actions", [])
         location = report_data.get("location")
 
         icon_map = {
             "FIRE": "🔥", "FLOOD": "🌊", "EARTHQUAKE": "🏚️", "FALL": "🤕",
             "CAR CRASH": "🚗", "MEDICAL": "🏥", "VIOLENCE": "⚠️",
         }
-        icon = icon_map.get(emergency_type, "🚨")
+        icon = icon_map.get(etype, "🚨")
 
         lines = [
-            f"🚨 **EMERGENCY DISPATCH REPORT** 🚨",
-            "",
-            f"{icon} **Incident:** {emergency_type}",
-            f"⚡ **Severity:** {severity}",
+            f"🚨 **{etype}** — {severity}",
         ]
 
         if location:
             address = location.get("address")
             if address:
-                lines.append(f"📍 **Location:** {address}")
+                lines.append(f"📍 {address}")
             else:
                 lat = location.get("latitude")
                 lon = location.get("longitude")
                 if lat and lon:
-                    lines.append(f"📍 **Coordinates:** {lat}, {lon}")
+                    lines.append(f"📍 {lat}, {lon}")
 
         if description:
-            lines.append(f"\n📋 **Situation Report:**\n{description}")
-
-        if actions:
-            lines.append("\n🛟 **Required Response Actions:**")
-            for i, action in enumerate(actions, 1):
-                lines.append(f"  {i}. {action}")
-
-        lines.append("\n▶️ **Play the voice message above** for the full audio dispatch.")
-        lines.append("\n⚠️ **Immediate response required** — dispatched via Seraphim Emergency System")
+            lines.append(f"{icon} {description}")
 
         return "\n".join(lines)
 

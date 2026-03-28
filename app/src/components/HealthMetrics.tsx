@@ -161,16 +161,16 @@ export default function HealthMetrics() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginVertical: 8,
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 4,
     marginHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   title: {
     color: '#ffffff',
@@ -197,20 +197,20 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
+    gap: 8,
+    marginBottom: 8,
   },
   metricCard: {
     backgroundColor: '#0a0a0a',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 10,
+    padding: 10,
     alignItems: 'center',
     width: '48%',
     flexGrow: 1,
   },
   metricIcon: {
-    fontSize: 24,
-    marginBottom: 6,
+    fontSize: 18,
+    marginBottom: 4,
   },
   metricLabel: {
     color: '#888',
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricValue: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
@@ -232,11 +232,11 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 12,
   },
   emptyIcon: {
-    fontSize: 40,
-    marginBottom: 12,
+    fontSize: 28,
+    marginBottom: 8,
   },
   emptyTitle: {
     color: '#ffffff',
