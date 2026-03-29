@@ -143,12 +143,12 @@ export default function HealthMetrics() {
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isMonitoring ? '#FF5A4F22' : '#38BDF822' },
+              { backgroundColor: isMonitoring ? '#EF444422' : '#2563EB22' },
             ]}
             onPress={handleToggle}
             activeOpacity={0.7}
           >
-            <Text style={[styles.buttonText, { color: isMonitoring ? '#FF5A4F' : '#38BDF8' }]}>
+            <Text style={[styles.buttonText, { color: isMonitoring ? '#EF4444' : '#2563EB' }]}>
               {isMonitoring ? '■  Disconnect' : '▶  Connect Wearable'}
             </Text>
           </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function HealthMetrics() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     marginVertical: 4,
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricCard: {
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   metricUnit: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     marginTop: 2,
   },
@@ -239,27 +239,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyTitle: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 6,
   },
   emptySubtitle: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: 16,
   },
   errorBanner: {
-    backgroundColor: '#FF5A4F22',
+    backgroundColor: '#EF444422',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 12,
   },
   errorText: {
-    color: '#FF5A4F',
+    color: '#EF4444',
     fontSize: 12,
     fontWeight: '600',
   },

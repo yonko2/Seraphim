@@ -44,20 +44,20 @@ export default function LocationCard({ location }: LocationCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 8,
   },
   title: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 10,
   },
   address: {
-    color: '#CBD5E1',
+    color: '#6B7280',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 10,
@@ -69,20 +69,20 @@ const styles = StyleSheet.create({
   },
   coordBadge: {
     flex: 1,
-    backgroundColor: '#182336',
+    backgroundColor: '#F1F5F9',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   coordLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
     marginBottom: 2,
   },
   coordValue: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#22C55E',
   },
   statusText: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
   },
 });

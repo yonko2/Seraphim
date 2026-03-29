@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F4F6F8" />
       <TopNavbar currentPage="Profile" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
@@ -257,33 +257,33 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
   },
   content: {
     paddingTop: 12,
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 10,
   },
   cardTitle: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 12,
   },
   hint: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     lineHeight: 18,
     marginBottom: 12,
   },
   label: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -292,11 +292,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   input: {
-    backgroundColor: '#182336',
+    backgroundColor: '#F4F6F8',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 15,
   },
   multilineInput: {
@@ -309,14 +309,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   addBtn: {
-    backgroundColor: '#38BDF8',
+    backgroundColor: '#2563EB',
     borderRadius: 10,
     width: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addBtnText: {
-    color: '#D5DDE8',
+    color: '#FFFFFF',
     fontSize: 22,
     fontWeight: '800',
   },
@@ -327,24 +327,24 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   chip: {
-    backgroundColor: '#182336',
+    backgroundColor: '#F4F6F8',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#182336',
+    borderColor: '#E6EEF6',
   },
   chipActive: {
-    backgroundColor: '#FF5A4F20',
-    borderColor: '#FF5A4F',
+    backgroundColor: '#2563EB20',
+    borderColor: '#2563EB',
   },
   chipText: {
-    color: '#94A3B8',
+    color: '#0F172A',
     fontSize: 13,
     fontWeight: '600',
   },
   chipTextActive: {
-    color: '#FF5A4F',
+    color: '#2563EB',
   },
   tagRow: {
     flexDirection: 'row',
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#38BDF815',
+    backgroundColor: '#F4F6F8',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   tagText: {
-    color: '#38BDF8',
+    color: '#0F172A',
     fontSize: 13,
     fontWeight: '600',
   },

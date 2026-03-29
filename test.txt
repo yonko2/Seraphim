@@ -1,0 +1,6 @@
+Frontend:
+cd app && npx expo start --go --tunnel
+Backend:
+cd .\backend\ && .\venv\Scripts\Activate.ps1 && python main.py
+Server:
+cd .\backend\ && .\venv\Scripts\Activate.ps1 && npx ngrok http 8000

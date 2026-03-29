@@ -153,7 +153,7 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
   },
   content: {
     padding: 20,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
     marginBottom: 24,
   },
   sectionHeader: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
@@ -183,18 +183,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F8FAFC',
+    color: '#0F172A',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#F8FAFC',
+    color: '#0F172A',
     borderWidth: 1,
-    borderColor: '#182336',
+    borderColor: '#E6EEF6',
     marginBottom: 16,
   },
   sensitivityHeader: {

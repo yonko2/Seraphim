@@ -57,14 +57,18 @@ export default function ActivityLog({ entries }: ActivityLogProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
   },
   title: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 12,
@@ -78,13 +82,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyText: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
   emptySubtext: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
   },
   list: {
@@ -96,7 +100,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#182336',
+    borderBottomColor: '#E6EEF6',
   },
   icon: {
     fontSize: 18,
@@ -111,9 +115,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
+    color: '#0F172A',
   },
   rowTime: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     fontVariant: ['tabular-nums'],
   },

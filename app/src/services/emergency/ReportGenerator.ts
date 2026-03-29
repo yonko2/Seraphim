@@ -128,6 +128,7 @@ export class ReportGenerator {
       fall: 'A possible fall has been detected based on accelerometer data showing sudden high-G impact followed by stillness.',
       fire: 'A fire emergency has been detected via visual analysis. Smoke or flames may be present.',
       flood: 'Flooding conditions detected in the immediate area. Water levels may be rising.',
+      earthquake: 'Earthquake-like shaking detected. Structural hazards and secondary effects may be present.',
       car_crash: 'A vehicle collision has been detected. Impact sensors indicate significant force.',
       medical: 'A medical emergency has been reported. Vital signs may be abnormal.',
       violence: 'A violent incident has been detected in the area. Immediate danger may be present.',
@@ -153,6 +154,12 @@ export class ReportGenerator {
         'Avoid walking through floodwater.',
         'Call emergency services.',
         'Stay away from power lines.',
+      ],
+      earthquake: [
+        'Drop, cover, and hold on until shaking stops.',
+        'Move away from windows and heavy objects.',
+        'Once safe, check for injuries and hazards.',
+        'Call emergency services if structural damage or injuries are present.',
       ],
       car_crash: [
         'Ensure scene safety before approaching.',

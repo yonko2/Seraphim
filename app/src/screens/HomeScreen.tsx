@@ -47,7 +47,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
@@ -64,12 +64,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
     letterSpacing: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#94A3B8',
+    color: '#6B7280',
     marginTop: 8,
     letterSpacing: 2,
   },
@@ -82,9 +82,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   victimCard: {
-    backgroundColor: '#1a0a0a',
+    backgroundColor: '#FFF1F1',
     borderWidth: 1,
-    borderColor: '#FF5A4F',
+    borderColor: '#EF4444',
   },
   cardEmoji: {
     fontSize: 48,
@@ -93,12 +93,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: '#0F172A',
     marginBottom: 8,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#94A3B8',
+    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 20,
   },

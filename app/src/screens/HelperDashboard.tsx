@@ -134,7 +134,7 @@ const HelperDashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F4F6F8" />
       <TopNavbar currentPage="Helper" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.screenTitle}>🤝 Helper Mode</Text>
@@ -155,7 +155,7 @@ const HelperDashboard: React.FC = () => {
           disabled={isLoadingGuide}
         >
           {isLoadingGuide ? (
-            <ActivityIndicator color="#38BDF8" size="small" />
+            <ActivityIndicator color="#2563EB" size="small" />
           ) : (
             <Text style={styles.analyzeButtonText}>
               🔍 {hasClassification ? 'Get First Aid Guidance' : 'Capture Image First'}
@@ -198,7 +198,7 @@ const HelperDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
   },
   content: {
     paddingTop: 12,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   analyzeButton: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#38BDF822',
+    backgroundColor: '#2563EB22',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#38BDF844',
+    borderColor: '#2563EB44',
   },
   analyzeButtonDisabled: {
     opacity: 0.5,
@@ -233,12 +233,12 @@ const styles = StyleSheet.create({
   analyzeButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#38BDF8',
+    color: '#2563EB',
   },
   alertButton: {
     marginHorizontal: 16,
     marginTop: 16,
-    backgroundColor: '#FF5A4F',
+    backgroundColor: '#EF4444',
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center',
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   alertButtonText: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#FFFFFF',
   },
   bottomSpacer: {
     height: 30,

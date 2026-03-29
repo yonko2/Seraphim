@@ -8,11 +8,12 @@ const seraphimTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    background: '#0a0a0a',
-    card: '#1a1a1a',
-    text: '#ffffff',
-    primary: '#ff3b30',
-    border: '#333',
+    primary: '#2563EB',
+    background: '#F4F6F8',
+    card: '#FFFFFF',
+    text: '#0F172A',
+    border: '#E6EEF6',
+    notification: '#2563EB',
   },
 };
 
@@ -20,7 +21,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <NavigationContainer theme={seraphimTheme}>
-        <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
+        <StatusBar barStyle="dark-content" backgroundColor="#F4F6F8" />
         <AppNavigator />
       </NavigationContainer>
     </ErrorBoundary>

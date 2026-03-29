@@ -318,7 +318,7 @@ const VictimDashboard: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#D5DDE8" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F4F6F8" />
       <TopNavbar currentPage="Dashboard" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} removeClippedSubviews={false}>
         {/* Camera Feed */}
@@ -337,7 +337,7 @@ const VictimDashboard: React.FC = () => {
             <Text style={styles.capturedImageLabel}>📸 Captured Image</Text>
             <Image
               source={{ uri: capturedImage }}
-              style={styles.capturedImage}
+              style={styles.capturedImage as any}
               resizeMode="cover"
             />
           </View>
@@ -497,12 +497,12 @@ const styles = StyleSheet.create({
   capturedImagePanel: {
     marginHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
   },
   capturedImageLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 8,
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 16 / 9,
     borderRadius: 10,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
   },
   resultPanel: {
     marginHorizontal: 16,
@@ -562,17 +562,17 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
   resultTitle: {
-    color: '#FF5A4F',
+    color: '#EF4444',
     fontSize: 18,
     fontWeight: '800',
   },
   resultMeta: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     marginTop: 2,
   },
   resultDescription: {
-    color: '#CBD5E1',
+    color: '#0F172A',
     fontSize: 14,
     marginTop: 10,
     fontStyle: 'italic',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   },
   instructionsBox: {
     marginTop: 12,
-    backgroundColor: '#F8FAFC10',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     padding: 12,
   },
@@ -591,15 +591,30 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   instructionStep: {
-    color: '#CBD5E1',
+    color: '#0F172A',
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 2,
   },
-  emergencyButton: undefined,
-  emergencyButtonIcon: undefined,
-  emergencyButtonText: undefined,
-  emergencyButtonSub: undefined,
+  emergencyButton: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  emergencyButtonIcon: {
+    fontSize: 18,
+  },
+  emergencyButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  emergencyButtonSub: {
+    color: '#6B7280',
+    fontSize: 12,
+  },
   bottomSpacer: {
     height: 30,
   },

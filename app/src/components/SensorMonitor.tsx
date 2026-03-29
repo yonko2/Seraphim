@@ -20,7 +20,7 @@ function getMagnitudeStatus(magnitude: number, fallDetected: boolean): 'normal' 
 const STATUS_COLORS = {
   normal: '#22C55E',
   elevated: '#ffd60a',
-  fall: '#FF5A4F',
+  fall: '#EF4444',
 } as const;
 
 export default function SensorMonitor() {
@@ -128,11 +128,11 @@ export default function SensorMonitor() {
 
       {/* Toggle Button */}
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: isActive ? '#FF5A4F22' : '#38BDF822' }]}
+        style={[styles.button, { backgroundColor: isActive ? '#EF444422' : '#2563EB22' }]}
         onPress={handleToggle}
         activeOpacity={0.7}
       >
-        <Text style={[styles.buttonText, { color: isActive ? '#FF5A4F' : '#38BDF8' }]}>
+        <Text style={[styles.buttonText, { color: isActive ? '#EF4444' : '#2563EB' }]}>
           {isActive ? '■  Stop Monitoring' : '▶  Start Monitoring'}
         </Text>
       </TouchableOpacity>
@@ -152,7 +152,7 @@ function AxisValue({ label, value, unit }: { label: string; value: number; unit?
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginVertical: 8,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 18,
     fontWeight: '700',
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -206,19 +206,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   axisLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     fontWeight: '600',
     marginBottom: 2,
   },
   axisValue: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   axisUnit: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 10,
     marginTop: 1,
   },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   magnitudeLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     fontWeight: '500',
     width: 68,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   magnitudeBarBg: {
     flex: 1,
     height: 6,
-    backgroundColor: '#182336',
+    backgroundColor: '#E6EEF6',
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -258,13 +258,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   baroValue: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 22,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   baroUnit: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
   },
   noData: {
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   alertBanner: {
-    backgroundColor: '#FF5A4F22',
+    backgroundColor: '#EF444422',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertText: {
-    color: '#FF5A4F',
+    color: '#EF4444',
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 1,

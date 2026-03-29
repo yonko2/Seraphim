@@ -18,6 +18,7 @@ const EMERGENCY_CONFIG: Record<EmergencyType, { icon: string; label: string; col
   fall: { icon: '🤕', label: 'Fall Injury', color: '#ff9500' },
   fire: { icon: '🔥', label: 'Fire Emergency', color: '#ff3b30' },
   flood: { icon: '🌊', label: 'Flood Emergency', color: '#007AFF' },
+  earthquake: { icon: '🌎', label: 'Earthquake', color: '#F59E0B' },
   car_crash: { icon: '🚗', label: 'Vehicle Accident', color: '#ff9500' },
   medical: { icon: '🏥', label: 'Medical Emergency', color: '#ff3b30' },
   violence: { icon: '⚠️', label: 'Violence / Threat', color: '#ff3b30' },

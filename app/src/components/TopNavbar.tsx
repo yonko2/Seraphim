@@ -25,7 +25,7 @@ export default function TopNavbar({ currentPage }: TopNavbarProps) {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#1A2538',
+    backgroundColor: '#F4F6F8',
   },
   navbar: {
     flexDirection: 'row',
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#182336',
+    borderBottomColor: '#E6EEF6',
   },
   left: {
     flexDirection: 'row',
@@ -47,19 +47,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   brand: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 1.5,
   },
   pageBadge: {
-    backgroundColor: '#182336',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
   },
   pageText: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     fontWeight: '600',
   },

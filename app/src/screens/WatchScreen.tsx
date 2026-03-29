@@ -637,14 +637,14 @@ function ScoreBadge({ label, value }: { label: string; value: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#D5DDE8',
+    backgroundColor: '#F4F6F8',
   },
   content: {
     paddingTop: 12,
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#0E1726',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 16,
     marginHorizontal: 16,
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 17,
     fontWeight: '700',
   },
@@ -666,9 +666,9 @@ const styles = StyleSheet.create({
   simBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#DC262630',
+    backgroundColor: '#FFF1F1',
     borderWidth: 1,
-    borderColor: '#DC2626',
+    borderColor: '#EF4444',
     borderRadius: 14,
     padding: 14,
     marginHorizontal: 16,
@@ -679,34 +679,34 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   simBannerTitle: {
-    color: '#FF5A4F',
+    color: '#EF4444',
     fontSize: 15,
     fontWeight: '800',
   },
   simBannerThreshold: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     marginTop: 2,
   },
 
   // Sim badge
   simBadge: {
-    backgroundColor: '#38BDF822',
+    backgroundColor: '#2563EB22',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   simBadgeCritical: {
-    backgroundColor: '#FF5A4F22',
+    backgroundColor: '#EF444422',
   },
   simBadgeText: {
-    color: '#38BDF8',
+    color: '#2563EB',
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   simBadgeTextCritical: {
-    color: '#FF5A4F',
+    color: '#EF4444',
   },
 
   // Status badges
@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   healthTile: {
-    backgroundColor: '#182336',
+    backgroundColor: '#F4F6F8',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
@@ -749,23 +749,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   healthTileCritical: {
-    backgroundColor: '#FF5A4F15',
+    backgroundColor: '#FFF1F1',
     borderWidth: 1,
-    borderColor: '#FF5A4F55',
+    borderColor: '#FFB4B4',
   },
   tileIcon: {
     fontSize: 20,
     marginBottom: 4,
   },
   tileLabel: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
-  },
-  tileValue: {
+  },  tileValue: {
     fontSize: 24,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
@@ -790,7 +789,7 @@ const styles = StyleSheet.create({
 
   // Simulate emergency
   simDescription: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     lineHeight: 19,
     marginBottom: 14,
@@ -801,7 +800,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   simButton: {
-    backgroundColor: '#182336',
+    backgroundColor: '#F4F6F8',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center',
@@ -810,18 +809,18 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: 72,
     borderWidth: 1,
-    borderColor: '#182336',
+    borderColor: '#E6EEF6',
   },
   simButtonActive: {
-    borderColor: '#FF5A4F',
-    backgroundColor: '#FF5A4F15',
+    borderColor: '#EF4444',
+    backgroundColor: '#FFF1F1',
   },
   simButtonIcon: {
     fontSize: 24,
     marginBottom: 4,
   },
   simButtonLabel: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
@@ -832,12 +831,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sensorBlock: {
-    backgroundColor: '#182336',
+    backgroundColor: '#F4F6F8',
     borderRadius: 10,
     padding: 12,
   },
   sensorTitle: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
@@ -852,29 +851,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   axisLabel: {
-    color: '#475569',
+    color: '#6B7280',
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 2,
   },
   axisValue: {
-    color: '#38BDF8',
+    color: '#2563EB',
     fontSize: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
   magText: {
-    color: '#475569',
+    color: '#6B7280',
     fontSize: 11,
     textAlign: 'center',
     marginTop: 6,
   },
   sensorHint: {
-    color: '#94A3B8',
+    color: '#6B7280',
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: 16,
   },
+
 
   // Collapse monitoring
   monitorDescription: {
@@ -884,39 +884,40 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   monitorToggle: {
-    backgroundColor: '#38BDF822',
+    backgroundColor: '#2563EB22',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
   },
   monitorToggleActive: {
-    backgroundColor: '#FF5A4F22',
+    backgroundColor: '#EF444422',
   },
   monitorToggleText: {
-    color: '#38BDF8',
+    color: '#2563EB',
     fontSize: 15,
     fontWeight: '700',
   },
   monitorToggleTextActive: {
-    color: '#FF5A4F',
+    color: '#EF4444',
   },
+
   resultCard: {
     marginTop: 14,
     borderRadius: 10,
     padding: 12,
   },
   resultDanger: {
-    backgroundColor: '#FF5A4F18',
+    backgroundColor: '#FFF1F1',
     borderWidth: 1,
-    borderColor: '#FF5A4F',
+    borderColor: '#EF4444',
   },
   resultOk: {
-    backgroundColor: '#22C55E12',
+    backgroundColor: '#F1FBF6',
     borderWidth: 1,
     borderColor: '#22C55E44',
   },
   resultLabel: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 4,
